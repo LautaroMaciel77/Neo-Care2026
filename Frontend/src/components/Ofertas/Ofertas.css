@@ -1,0 +1,11 @@
+.ofertas-destacadas__titulo::after {
+    content: '';
+    position: absolute;
+    width: 15%;
+    height: 10px;
+    top: 135%;
+    left: 0;
+    border-radius: 5000px;
+    background: linear-gradient(to bottom right, #4ade80, #2563eb); /* green-400 to blue-600 */
+    transition: background 0.5s ease;
+}

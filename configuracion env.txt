@@ -1,0 +1,17 @@
+.env para el front
+
+VITE_API_URL=http://localhost:5000/api
+
+
+.env para el Back:
+
+PORT=5000
+
+# Datos para conectar a tu SQL Server
+DB_USER=usuariojobmatch
+DB_PASSWORD=1234
+DB_SERVER=localhost  # o la IP si es remoto
+DB_DATABASE=BDjobMatch
+
+# JWT para autenticaciones futuras
+JWT_SECRET=unasecretamuysupersegura

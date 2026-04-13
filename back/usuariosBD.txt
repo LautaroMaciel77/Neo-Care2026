@@ -1,0 +1,27 @@
+USE clinica;
+usuario: Neouser
+contraseña: 1234
+
+
+usuario: userNeo
+contraseña: 1234
+
+usuario: usuarioNeocare
+contraseña: 1234
+
+
+CREATE LOGIN Neouser WITH PASSWORD = '1234';
+CREATE USER Neouser FOR LOGIN Neouser;
+ALTER ROLE db_owner ADD MEMBER Neouser;
+
+
+
+CREATE LOGIN userNeo WITH PASSWORD = '1234';
+CREATE USER userNeo FOR LOGIN userNeo;
+ALTER ROLE db_owner ADD MEMBER userNeo;
+
+
+Principal:
+CREATE LOGIN usuarioNeocare WITH PASSWORD = '1234';
+CREATE USER usuarioNeocare FOR LOGIN usuarioNeocare;
+ALTER ROLE db_owner ADD MEMBER usuarioNeocare;

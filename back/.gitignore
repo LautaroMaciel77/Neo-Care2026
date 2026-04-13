@@ -1,0 +1,41 @@
+# Node modules
+node_modules/
+
+# Entornos
+.env
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Bases de datos locales
+*.sqlite
+
+# Directorios de producción o builds
+dist/
+build/
+
+# Sistemas
+.DS_Store
+Thumbs.db
+
+# Configs editor
+.vscode/
+.idea/
+
+# Coverage reports (de tests)
+coverage/
+
+# PM2 logs
+pids
+*.pid
+*.seed
+
+# Others
+*.tgz
+yarn-error.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

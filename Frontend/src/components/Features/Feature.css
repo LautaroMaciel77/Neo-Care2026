@@ -1,0 +1,19 @@
+/* .section-feature {
+    background-image: url('../../../public/team.svg');
+    background-repeat: no-repeat;
+    background-position: bottom left;
+    background-size: 40%;
+} */
+
+/* .bg::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../../../public/patronbg.png');
+    background-attachment: fixed;
+    opacity: .08;
+    z-index: 1;
+} */

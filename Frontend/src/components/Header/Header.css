@@ -1,0 +1,14 @@
+.headerJB {
+    animation: enhance-header linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 300px;
+    background-color: rgba(17, 24, 39);
+}
+
+@keyframes enhance-header {
+    to {
+      background-color: rgba(55, 65, 81, 0.6);
+      backdrop-filter: blur(15px);
+      border-bottom: none;
+    }
+  }
