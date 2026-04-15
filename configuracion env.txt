@@ -7,11 +7,12 @@ VITE_API_URL=http://localhost:5000/api
 
 PORT=5000
 
+DB_HOST=localhost
 # Datos para conectar a tu SQL Server
-DB_USER=usuariojobmatch
+DB_USER=usuarioneocare
 DB_PASSWORD=1234
 DB_SERVER=localhost  # o la IP si es remoto
-DB_DATABASE=BDjobMatch
+DB_DATABASE=clinica
 
 # JWT para autenticaciones futuras
 JWT_SECRET=unasecretamuysupersegura
