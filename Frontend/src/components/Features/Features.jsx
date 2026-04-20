@@ -5,17 +5,17 @@ import { FeatureCard } from '../Feature/FeatureCard'
 const FEATURES = [
   {
     titulo: "Algoritmo de coincidencia avanzado",
-    descripcion: "Nuestro sistema de IA analiza tu perfil y preferencias para encontrar las oportunidades que mejor se adaptan a tus habilidades y experiencia.",
+    descripcion: "Nuestro sistema de IA analiza síntomas, especialidades y disponibilidad para conectar pacientes con el médico ideal en minutos.",
     imagen: "brain.svg",
   },
   {
-    titulo: "Empresas verificadas",
-    descripcion: "Todas las empresas en nuestra plataforma pasan por un proceso de verificación para garantizar ofertas legítimas y de calidad.",
+    titulo: "Médicos verificados",
+    descripcion: "Todos los profesionales de la salud en nuestra plataforma pasan por un riguroso proceso de verificación de credenciales y matrículas.",
     imagen: "shield.svg",
   },
   {
     titulo: "Privacidad garantizada",
-    descripcion: "Controla quién puede ver tu perfil y mantén la confidencialidad de tu búsqueda de empleo con nuestras opciones de privacidad avanzadas.",
+    descripcion: "Tus datos médicos están protegidos bajo estrictos estándares de confidencialidad. Solo tú decides qué información compartir.",
     imagen: "security.svg",
   },
 ];
@@ -26,10 +26,10 @@ export const Features = () => {
       <section className='max-w-screen-xl mx-auto p-4 py-30'>
         <div className="mb-26 text-center">
           <h3 className="text-5xl sm:text-4xl font-bold text-gray-800 mb-4">
-            ¿Por qué elegir JobMatch?
+            ¿Por qué elegir Neocare?
           </h3>
           <p className="text-gray-600 max-w-2xl mx-auto">
-            Ofrecemos herramientas avanzadas que simplifican tu búsqueda de empleo o la contratación de talento.
+            Simplificamos la gestión de turnos médicos, conectando pacientes con profesionales de confianza.
           </p>
         </div>
 

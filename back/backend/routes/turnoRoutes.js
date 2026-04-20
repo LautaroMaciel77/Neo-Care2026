@@ -9,7 +9,8 @@ const {
     cancelarTurno,
     actualizarTurno,
     obtenerTurnoPorId,
-    verificarConflictoHorario
+    verificarConflictoHorario,
+    modificarHorarioTurno
 } = require('../controllers/turnoController');
 
 // Listar turnos disponibles - Público
@@ -35,5 +36,7 @@ router.put('/:id', protect, actualizarTurno);
 
 // Cancelar turno - Solo médicos (dueños del turno)
 router.delete('/:id', protect, cancelarTurno);
+// modificar turno - Solo médicos (dueños del turno)
+router.patch('/:id/horario', protect, modificarHorarioTurno);
 
 module.exports = router;

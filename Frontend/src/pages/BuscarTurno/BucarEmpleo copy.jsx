@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import Icon from "../../components/Icon/Icon";
 import API from '../../../services/axiosInstance';
-import { useLocation } from 'react-router-dom';
 
-
-export default function BuscarEmpleo() {
+export default function BuscarTurno() {
     const [seleccionada, setSeleccionada] = useState(null);
     const [search, setSearch] = useState("");
     const [filtroUbicacion, setFiltroUbicacion] = useState("");
@@ -16,16 +14,14 @@ export default function BuscarEmpleo() {
     const [postulacionMensaje, setPostulacionMensaje] = useState(null);
     const [postulacionError, setPostulacionError] = useState(false);
 
-    const location = useLocation();
-    const ofertaIdDesdeLink = location.state?.ofertaId;
-
-
-    // Cargar ofertas desde la API
     useEffect(() => {
         const obtenerOfertas = async () => {
             try {
                 const response = await API.get('/ofertas');
                 setOfertas(response.data);
+                if (response.data.length > 0) {
+                    setSeleccionada(response.data[0]);
+                }
                 setCargando(false);
             } catch (err) {
                 console.error('Error al obtener ofertas:', err);
@@ -36,23 +32,6 @@ export default function BuscarEmpleo() {
 
         obtenerOfertas();
     }, []);
-
-    useEffect(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, []);
-
-    // Seleccionar oferta desde navegación o default
-    useEffect(() => {
-        if (ofertas.length > 0) {
-            if (ofertaIdDesdeLink) {
-                const encontrada = ofertas.find((o) => String(o.id_oferta) === String(ofertaIdDesdeLink));
-                setSeleccionada(encontrada || ofertas[0]);
-            } else {
-                setSeleccionada(ofertas[0]);
-            }
-        }
-    }, [ofertas, ofertaIdDesdeLink]);
-
 
     /* const ubicaciones = [...new Set(ofertas.map((o) => o.ubicacion))]; */
     const contratos = [...new Set(ofertas.map((o) => o.tipo_contrato))];

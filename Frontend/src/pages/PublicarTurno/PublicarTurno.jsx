@@ -1,11 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import API from '../../../services/axiosInstance';
 import { useNavigate } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import './PublicarEmpleo.css';
 
-export default function PublicarEmpleo() {
+export default function PublicarTurno() {
     const [formData, setFormData] = useState({
         fecha: '',
         hora_inicio: '',
@@ -15,6 +14,23 @@ export default function PublicarEmpleo() {
     const [formErrors, setFormErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+
+    // Verificar autenticación y rol al cargar el componente
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            toast.error('🔒 Debes iniciar sesión para acceder a esta página');
+            setTimeout(() => navigate('/'), 2000);
+            return;
+        }
+        
+        if (userRole !== 'medico') {
+            toast.warning('👨‍⚕️ Esta sección es solo para médicos');
+            setTimeout(() => navigate('/'), 2500);
+        }
+    }, [navigate]);
 
     // Generar opciones de horas cada 30 minutos
     const generarOpcionesHoras = () => {
@@ -90,6 +106,21 @@ export default function PublicarEmpleo() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
+        
+        if (!token) {
+            toast.error('🔒 Sesión expirada. Por favor, inicia sesión nuevamente.');
+            setTimeout(() => navigate('/'), 1500);
+            return;
+        }
+
+        if (userRole !== 'medico') {
+            toast.error('👨‍⚕️ Acceso denegado. Solo los médicos pueden publicar turnos.');
+            setTimeout(() => navigate('/'), 1500);
+            return;
+        }
+
         const newErrors = {};
         Object.keys(formData).forEach((key) => {
             const error = validateField(key, formData[key], formData);
@@ -98,28 +129,13 @@ export default function PublicarEmpleo() {
 
         if (Object.keys(newErrors).length > 0) {
             setFormErrors(newErrors);
-            toast.error('Por favor corrige los errores del formulario');
+            toast.error('❌ Por favor corrige los errores del formulario');
             return;
         }
 
         setIsLoading(true);
 
         try {
-            const token = localStorage.getItem('token');
-            const userRole = localStorage.getItem('userRole');
-            
-            if (!token) {
-                toast.error('Debes iniciar sesión para publicar un turno.');
-                navigate('/login');
-                return;
-            }
-
-            if (userRole !== 'medico') {
-                toast.error('Solo los médicos pueden publicar turnos.');
-                navigate('/publicar-empleo');
-                return;
-            }
-
             const { fecha, hora_inicio, hora_fin } = formData;
 
             const response = await API.post('/turnos',
@@ -136,40 +152,50 @@ export default function PublicarEmpleo() {
                 }
             );
 
-            console.log('Turno publicado:', response.data);
-            toast.success('¡Turno publicado exitosamente!');
+            toast.success('✅ ¡Turno publicado exitosamente!');
 
-            // Limpiar formulario después de publicar
             setFormData({
                 fecha: '',
                 hora_inicio: '',
                 hora_fin: ''
             });
 
-            setTimeout(() => navigate('/publicar-empleo'), 2000);
+            setTimeout(() => navigate('/mis-turnos'), 2000);
 
         } catch (error) {
             console.error('Error al publicar turno:', error);
+            
             if (error.response) {
-                toast.error('Error: ' + (error.response.data.message || 'Error desconocido'));
+                const errorMessage = error.response.data.message || 'Error desconocido';
+                
+                if (error.response.status === 401) {
+                    toast.error('🔒 Token inválido o expirado. Por favor, inicia sesión nuevamente.');
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('userRole');
+                    setTimeout(() => navigate('/'), 2000);
+                } else if (error.response.status === 403) {
+                    toast.error('⛔ No tienes permisos para realizar esta acción.');
+                } else {
+                    toast.error(`❌ Error: ${errorMessage}`);
+                }
+            } else if (error.request) {
+                toast.error('🌐 Error de conexión. Verifica tu internet.');
             } else {
-                toast.error('Error: ' + error.message);
+                toast.error('❌ Error: ' + error.message);
             }
         } finally {
             setIsLoading(false);
         }
     };
 
-    // Formatear fecha para mostrar
     const formatearFecha = (fecha) => {
         if (!fecha) return '';
         const [year, month, day] = fecha.split('-');
         return `${day}/${month}/${year}`;
     };
 
-    // Clase para inputs
     const getInputClass = (field) => {
-        let baseClass = "w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200";
+        let baseClass = "w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500";
         
         if (formErrors[field]) {
             return `${baseClass} border-red-500 bg-red-50`;
@@ -179,19 +205,30 @@ export default function PublicarEmpleo() {
             return `${baseClass} border-green-500 bg-green-50`;
         }
         
-        return `${baseClass} border-gray-300 bg-white hover:border-gray-400`;
+        return `${baseClass} border-gray-300 bg-white`;
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
-            <ToastContainer />
+        <div className="min-h-screen bg-gray-50 py-12 px-4">
+            <ToastContainer 
+                position="top-center"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={true}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+            />
             <div className="max-w-2xl mx-auto">
                 <div className="text-center mb-8">
                     <h3 className="text-4xl font-bold text-gray-800 mb-2">Publicar Turno Médico</h3>
                     <p className="text-gray-600">Selecciona la fecha y hora para tu disponibilidad</p>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-xl p-8">
+                <div className="bg-white rounded-xl shadow-lg p-8">
                     <form onSubmit={handleSubmit}>
                         {/* Fecha */}
                         <div className="mb-6">
@@ -270,7 +307,7 @@ export default function PublicarEmpleo() {
                         {/* Resumen del turno */}
                         {formData.fecha && formData.hora_inicio && formData.hora_fin && 
                          !formErrors.fecha && !formErrors.hora_inicio && !formErrors.hora_fin && (
-                            <div className="mb-8 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                            <div className="mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                 <p className="text-sm font-semibold text-blue-800 mb-2">📋 Resumen del turno:</p>
                                 <p className="text-gray-700">
                                     Turno agendado para el <span className="font-bold">{formatearFecha(formData.fecha)}</span>
@@ -291,15 +328,16 @@ export default function PublicarEmpleo() {
                                         hora_fin: ''
                                     });
                                     setFormErrors({});
+                                    toast.info('🧹 Formulario limpiado');
                                 }}
-                                className="px-6 py-3 rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+                                className="px-6 py-3 rounded-lg border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50"
                             >
                                 Limpiar
                             </button>
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-600 text-white font-semibold rounded-lg hover:from-green-600 hover:to-blue-700 focus:ring-4 focus:ring-green-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                                className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? 'Publicando...' : 'Publicar Turno'}
                             </button>

@@ -2,17 +2,15 @@ const { sql } = require('../config/db');
 const bcrypt = require('bcryptjs');
 const generateToken = require('../utils/generateToken');
 
-
-// Registrar usuario general (crea usuario base)
+// Registrar usuario general
 const registerUsuario = async (req, res) => {
-    const { nombre, email, password, telefono } = req.body;
+    const { nombre, email, password, telefono, id_localidad } = req.body;
 
     try {
         if (!nombre || !email || !password) {
             return res.status(400).json({ message: 'Completar todos los campos obligatorios (nombre, email, password)' });
         }
 
-        // Verificar si el email ya existe
         const userExists = await sql.query`
             SELECT id_usuario FROM usuario WHERE email = ${email}
         `;
@@ -21,15 +19,13 @@ const registerUsuario = async (req, res) => {
             return res.status(400).json({ message: 'El email ya está registrado' });
         }
 
-        // Encriptar contraseña
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Insertar nuevo usuario
         const result = await sql.query`
-            INSERT INTO usuario (nombre, email, password, telefono) 
+            INSERT INTO usuario (nombre, email, password, telefono, id_localidad) 
             OUTPUT INSERTED.id_usuario
-            VALUES (${nombre}, ${email}, ${hashedPassword}, ${telefono || null})
+            VALUES (${nombre}, ${email}, ${hashedPassword}, ${telefono || null}, ${id_localidad || null})
         `;
 
         res.status(201).json({
@@ -42,7 +38,7 @@ const registerUsuario = async (req, res) => {
     }
 };
 
-// Registrar médico (profesional)
+// Registrar médico
 const registerMedico = async (req, res) => {
     const { id_usuario, especialidad } = req.body;
 
@@ -51,7 +47,6 @@ const registerMedico = async (req, res) => {
             return res.status(400).json({ message: 'Completar todos los campos obligatorios (id_usuario, especialidad)' });
         }
 
-        // Verificar si el usuario existe
         const userExists = await sql.query`
             SELECT id_usuario FROM usuario WHERE id_usuario = ${id_usuario}
         `;
@@ -60,7 +55,6 @@ const registerMedico = async (req, res) => {
             return res.status(404).json({ message: 'El usuario no existe' });
         }
 
-        // Verificar si ya es médico
         const medicoExists = await sql.query`
             SELECT id_medico FROM medico WHERE id_usuario = ${id_usuario}
         `;
@@ -69,7 +63,6 @@ const registerMedico = async (req, res) => {
             return res.status(400).json({ message: 'El usuario ya está registrado como médico' });
         }
 
-        // Insertar médico
         const result = await sql.query`
             INSERT INTO medico (especialidad, id_usuario) 
             OUTPUT INSERTED.id_medico
@@ -95,7 +88,6 @@ const registerPaciente = async (req, res) => {
             return res.status(400).json({ message: 'Completar los campos obligatorios (id_usuario, edad)' });
         }
 
-        // Verificar si el usuario existe
         const userExists = await sql.query`
             SELECT id_usuario FROM usuario WHERE id_usuario = ${id_usuario}
         `;
@@ -104,7 +96,6 @@ const registerPaciente = async (req, res) => {
             return res.status(404).json({ message: 'El usuario no existe' });
         }
 
-        // Verificar si ya es paciente
         const pacienteExists = await sql.query`
             SELECT id_paciente FROM paciente WHERE id_usuario = ${id_usuario}
         `;
@@ -113,7 +104,6 @@ const registerPaciente = async (req, res) => {
             return res.status(400).json({ message: 'El usuario ya está registrado como paciente' });
         }
 
-        // Insertar paciente
         const result = await sql.query`
             INSERT INTO paciente (edad, alergias, id_usuario) 
             OUTPUT INSERTED.id_paciente
@@ -139,9 +129,15 @@ const loginUser = async (req, res) => {
             return res.status(400).json({ message: 'Completar todos los campos' });
         }
 
-        // Buscar usuario por email
         const users = await sql.query`
-            SELECT * FROM usuario WHERE email = ${email}
+            SELECT 
+                u.*,
+                l.nombre_localidad,
+                p.nombre_provincia
+            FROM usuario u
+            LEFT JOIN localidad l ON u.id_localidad = l.id_localidad
+            LEFT JOIN provincia p ON l.id_provincia = p.id_provincia
+            WHERE u.email = ${email}
         `;
 
         if (users.recordset.length === 0) {
@@ -149,15 +145,12 @@ const loginUser = async (req, res) => {
         }
 
         const user = users.recordset[0];
-
-        // Verificar contraseña
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
             return res.status(400).json({ message: 'Contraseña incorrecta' });
         }
 
-        // Verificar si es médico o paciente
         const medico = await sql.query`
             SELECT id_medico, especialidad FROM medico WHERE id_usuario = ${user.id_usuario}
         `;
@@ -184,8 +177,14 @@ const loginUser = async (req, res) => {
                 id_usuario: user.id_usuario,
                 nombre: user.nombre,
                 email: user.email,
+                telefono: user.telefono,
                 rol: rol,
-                id_rol: id_rol
+                id_rol: id_rol,
+                ubicacion: {
+                    id_localidad: user.id_localidad,
+                    localidad: user.nombre_localidad,
+                    provincia: user.nombre_provincia
+                }
             }
         });
 
@@ -195,9 +194,53 @@ const loginUser = async (req, res) => {
     }
 };
 
+// Obtener perfil de usuario 
+const getPerfil = async (req, res) => {
+    try {
+        const result = await sql.query`
+            EXEC sp_GetPerfilUsuario @id_usuario = ${req.user.id_usuario}
+        `;
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+
+        res.json(result.recordset[0]);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener perfil' });
+    }
+};
+
+// Actualizar ubicación del usuario 
+const actualizarUbicacion = async (req, res) => {
+    const { id_localidad } = req.body;
+
+    try {
+        if (!id_localidad) {
+            return res.status(400).json({ message: 'El ID de localidad es obligatorio' });
+        }
+
+        const result = await sql.query`
+            EXEC sp_ActualizarUbicacionUsuario
+                @id_usuario = ${req.user.id_usuario},
+                @id_localidad = ${id_localidad}
+        `;
+
+        res.json({ 
+            message: result.recordset[0]?.Mensaje || 'Ubicación actualizada exitosamente' 
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: error.message || 'Error al actualizar ubicación' });
+    }
+};
+
 module.exports = {
     registerUsuario,
     registerMedico,
     registerPaciente,
     loginUser,
+    getPerfil,
+    actualizarUbicacion
 };
