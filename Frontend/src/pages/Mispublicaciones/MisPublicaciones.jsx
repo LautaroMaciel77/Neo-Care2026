@@ -24,7 +24,7 @@ export const MisTurnos = () => {
         completado: 'bg-blue-100 text-blue-800'
     };
 
-    // Generar opciones de horas cada 30 minutos (misma función que en PublicarTurno)
+    // Generar opciones de horas cada 30 minutos
     const generarOpcionesHoras = () => {
         const opciones = [];
         for (let i = 0; i < 24; i++) {
@@ -68,6 +68,7 @@ export const MisTurnos = () => {
             setCargando(true);
             const token = localStorage.getItem('token');
             
+            // ✅ CORREGIDO: Ahora usa la ruta correcta 'mis-turnos'
             const response = await API.get('/turnos/mis-turnos', {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -412,12 +413,12 @@ export const MisTurnos = () => {
                 ))}
             </div>
 
-            {/* Modal para modificar horario - Ahora usando SELECT igual que PublicarTurno */}
+            {/* Modal para modificar horario */}
             {modalAbierto && turnoEditando && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
                         <div className="flex justify-between items-center mb-5">
-                            <h3 className="text-xl font-bold text-gray-800">Modificar Horario</h3>
+                            <h3 className="text-xl font-bold text-gray-800">✏️ Modificar Horario</h3>
                             <button
                                 onClick={() => setModalAbierto(false)}
                                 className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -429,7 +430,7 @@ export const MisTurnos = () => {
                         {turnoEditando.paciente_nombre && (
                             <div className="mb-4 p-3 bg-yellow-50 rounded border border-yellow-200">
                                 <p className="text-sm text-gray-700">
-                                    <span className="font-semibold"> Atención:</span> Este turno tiene un paciente asignado 
+                                    <span className="font-semibold">⚠️ Atención:</span> Este turno tiene un paciente asignado 
                                     (<strong>{turnoEditando.paciente_nombre}</strong>). 
                                     Al modificar el horario, se le notificará automáticamente.
                                 </p>

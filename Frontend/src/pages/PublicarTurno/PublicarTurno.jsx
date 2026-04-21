@@ -160,7 +160,7 @@ export default function PublicarTurno() {
                 hora_fin: ''
             });
 
-            setTimeout(() => navigate('/mis-turnos'), 2000);
+            setTimeout(() => navigate('/mis-publicaciones'), 2000);
 
         } catch (error) {
             console.error('Error al publicar turno:', error);

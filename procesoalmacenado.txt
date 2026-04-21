@@ -1,0 +1,159 @@
+use clinica
+go
+-- ============================================
+-- PROCEDIMIENTO: sp_CrearTurno
+-- ============================================
+CREATE OR ALTER PROCEDURE [dbo].[sp_CrearTurno]
+    @fecha DATE,
+    @hora_inicio TIME(7),
+    @hora_fin TIME(7),
+    @estado VARCHAR(15),
+    @id_medico INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+       IF EXISTS (
+        SELECT 1 FROM turno 
+        WHERE id_medico = @id_medico 
+        AND fecha = @fecha
+        AND estado != 'cancelado'
+        AND (
+            -- Caso 1: El nuevo turno empieza dentro de un turno existente
+            (@hora_inicio >= hora_inicio AND @hora_inicio < hora_fin)
+            OR
+            -- Caso 2: El nuevo turno termina dentro de un turno existente
+            (@hora_fin > hora_inicio AND @hora_fin <= hora_fin)
+            OR
+            -- Caso 3: El nuevo turno contiene completamente un turno existente
+            (@hora_inicio <= hora_inicio AND @hora_fin >= hora_fin)
+        )
+    )
+    BEGIN
+        RAISERROR('Ya existe un turno en ese horario', 16, 1);
+        RETURN;
+    END
+    
+    -- Insertar el turno
+    INSERT INTO turno (fecha, hora_inicio, hora_fin, estado, id_medico)
+    VALUES (@fecha, @hora_inicio, @hora_fin, @estado, @id_medico);
+    
+    SELECT SCOPE_IDENTITY() AS id_turno;
+END
+
+-- ============================================
+-- PROCEDIMIENTO: sp_ModificarHorarioTurno (CORREGIDO)
+-- ============================================
+CREATE OR ALTER PROCEDURE [dbo].[sp_ModificarHorarioTurno]
+    @id_turno INT,
+    @id_medico INT,
+    @nueva_fecha DATE,
+    @nueva_hora_inicio TIME(7),
+    @nueva_hora_fin TIME(7)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    DECLARE @tiene_paciente BIT = 0;
+    DECLARE @nombre_paciente VARCHAR(100) = NULL;
+    DECLARE @email_paciente VARCHAR(100) = NULL;
+    
+    -- Verificar que el turno existe y pertenece al médico
+    IF NOT EXISTS (
+        SELECT 1 FROM turno 
+        WHERE id_turno = @id_turno AND id_medico = @id_medico
+    )
+    BEGIN
+        RAISERROR('Turno no encontrado o no te pertenece', 16, 1);
+        RETURN;
+    END
+    
+    -- Verificar si tiene paciente inscrito
+    SELECT 
+        @tiene_paciente = 1,
+        @nombre_paciente = u.nombre,
+        @email_paciente = u.email
+    FROM inscripcion i
+    INNER JOIN paciente p ON i.id_paciente = p.id_paciente
+    INNER JOIN usuario u ON p.id_usuario = u.id_usuario
+    WHERE i.id_turno = @id_turno;
+    
+    -- Verificar conflicto de horario (excluyendo este turno)
+    IF EXISTS (
+        SELECT 1 FROM turno 
+        WHERE id_medico = @id_medico 
+            AND id_turno != @id_turno
+            AND fecha = @nueva_fecha
+            AND estado != 'cancelado'
+            AND (
+                -- Caso 1: El nuevo turno empieza dentro de un turno existente
+                (@nueva_hora_inicio >= hora_inicio AND @nueva_hora_inicio < hora_fin)
+                OR
+                -- Caso 2: El nuevo turno termina dentro de un turno existente
+                (@nueva_hora_fin > hora_inicio AND @nueva_hora_fin <= hora_fin)
+                OR
+                -- Caso 3: El nuevo turno contiene completamente un turno existente
+                (@nueva_hora_inicio <= hora_inicio AND @nueva_hora_fin >= hora_fin)
+            )
+    )
+    BEGIN
+        RAISERROR('Ya existe otro turno en ese horario', 16, 1);
+        RETURN;
+    END
+    
+    -- Verificar que la hora sea válida
+    IF @nueva_hora_inicio >= @nueva_hora_fin
+    BEGIN
+        RAISERROR('La hora de inicio debe ser menor que la hora de fin', 16, 1);
+        RETURN;
+    END
+    
+    -- Actualizar el turno
+    UPDATE turno 
+    SET 
+        fecha = @nueva_fecha,
+        hora_inicio = @nueva_hora_inicio,
+        hora_fin = @nueva_hora_fin
+    WHERE id_turno = @id_turno;
+    
+    -- Devolver información
+    SELECT 
+        'Horario modificado exitosamente' AS Mensaje,
+        @tiene_paciente AS TienePaciente,
+        @nombre_paciente AS NombrePaciente,
+        @email_paciente AS EmailPaciente;
+END
+GO
+
+
+
+-- ============================================
+-- PROCEDIMIENTO: sp_VerificarConflictoHorario (CORREGIDO)
+-- ============================================
+CREATE OR ALTER PROCEDURE [dbo].[sp_VerificarConflictoHorario]
+    @id_medico INT,
+    @fecha DATE,
+    @hora_inicio TIME(7),
+    @hora_fin TIME(7),
+    @excluir_turno INT = NULL
+AS
+BEGIN
+    SELECT COUNT(*) AS conflicto
+    FROM turno 
+    WHERE id_medico = @id_medico 
+        AND fecha = @fecha
+        AND estado != 'cancelado'
+        AND (@excluir_turno IS NULL OR id_turno != @excluir_turno)
+        AND (
+            -- Caso 1: El nuevo turno empieza dentro de un turno existente
+            (@hora_inicio >= hora_inicio AND @hora_inicio < hora_fin)
+            OR
+            -- Caso 2: El nuevo turno termina dentro de un turno existente
+            (@hora_fin > hora_inicio AND @hora_fin <= hora_fin)
+            OR
+            -- Caso 3: El nuevo turno contiene completamente un turno existente
+            (@hora_inicio <= hora_inicio AND @hora_fin >= hora_fin)
+        )
+END
+GO
+GO
