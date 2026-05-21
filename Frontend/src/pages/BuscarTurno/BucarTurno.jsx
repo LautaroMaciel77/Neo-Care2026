@@ -3,94 +3,106 @@ import Icon from "../../components/Icon/Icon";
 import API from '../../../services/axiosInstance';
 import { useLocation } from 'react-router-dom';
 
-
 export default function BuscarTurno() {
-    const [seleccionada, setSeleccionada] = useState(null);
+    const [seleccionado, setSeleccionado] = useState(null);
     const [search, setSearch] = useState("");
-    const [filtroUbicacion, setFiltroUbicacion] = useState("");
-    const [filtroContrato, setFiltroContrato] = useState("");
-    const [ofertas, setOfertas] = useState([]);
+    const [filtroEspecialidad, setFiltroEspecialidad] = useState("");
+    const [filtroFecha, setFiltroFecha] = useState("");
+    const [turnos, setTurnos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
-    const [postulando, setPostulando] = useState(false);
-    const [postulacionMensaje, setPostulacionMensaje] = useState(null);
-    const [postulacionError, setPostulacionError] = useState(false);
+    const [inscribiendo, setInscribiendo] = useState(false);
+    const [inscripcionMensaje, setInscripcionMensaje] = useState(null);
+    const [inscripcionError, setInscripcionError] = useState(false);
 
     const location = useLocation();
-    const ofertaIdDesdeLink = location.state?.ofertaId;
+    const turnoIdDesdeLink = location.state?.turnoId;
 
-
-    // Cargar ofertas desde la API
+    // Cargar turnos desde la API (ruta pública)
     useEffect(() => {
-        const obtenerOfertas = async () => {
+        const obtenerTurnos = async () => {
             try {
-                const response = await API.get('/ofertas');
-                setOfertas(response.data);
+                const response = await API.get('/turnos');
+                setTurnos(response.data);
                 setCargando(false);
             } catch (err) {
-                console.error('Error al obtener ofertas:', err);
-                setError('Error al cargar las ofertas. Por favor, inténtalo de nuevo más tarde.');
+                console.error('Error al obtener turnos:', err);
+                setError('Error al cargar los turnos. Por favor, inténtalo de nuevo más tarde.');
                 setCargando(false);
             }
         };
 
-        obtenerOfertas();
+        obtenerTurnos();
     }, []);
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, []);
 
-    // Seleccionar oferta desde navegación o default
+    // Seleccionar turno desde navegación o default
     useEffect(() => {
-        if (ofertas.length > 0) {
-            if (ofertaIdDesdeLink) {
-                const encontrada = ofertas.find((o) => String(o.id_oferta) === String(ofertaIdDesdeLink));
-                setSeleccionada(encontrada || ofertas[0]);
+        if (turnos.length > 0) {
+            if (turnoIdDesdeLink) {
+                const encontrado = turnos.find((t) => String(t.id_turno) === String(turnoIdDesdeLink));
+                setSeleccionado(encontrado || turnos[0]);
             } else {
-                setSeleccionada(ofertas[0]);
+                setSeleccionado(turnos[0]);
             }
         }
-    }, [ofertas, ofertaIdDesdeLink]);
+    }, [turnos, turnoIdDesdeLink]);
 
+    const especialidades = [...new Set(turnos.map((t) => t.especialidad).filter(Boolean))];
 
-    /* const ubicaciones = [...new Set(ofertas.map((o) => o.ubicacion))]; */
-    const contratos = [...new Set(ofertas.map((o) => o.tipo_contrato))];
-
-    const ofertasFiltradas = ofertas.filter((oferta) => {
-        const coincideTitulo = oferta.titulo.toLowerCase().includes(search.toLowerCase());
-        const coincideUbicacion = filtroUbicacion
-            ? oferta.ubicacion.toLowerCase().includes(filtroUbicacion.toLowerCase())
+    const turnosFiltrados = turnos.filter((turno) => {
+        const coincideEspecialidad = turno.especialidad?.toLowerCase().includes(search.toLowerCase()) || 
+                                      turno.medico_nombre?.toLowerCase().includes(search.toLowerCase());
+        const coincideFiltroEspecialidad = filtroEspecialidad
+            ? turno.especialidad === filtroEspecialidad
             : true;
-        const coincideContrato = filtroContrato ? oferta.tipo_contrato === filtroContrato : true;
-        return coincideTitulo && coincideUbicacion && coincideContrato;
+        const coincideFecha = filtroFecha
+            ? turno.fecha === filtroFecha
+            : true;
+        return coincideEspecialidad && coincideFiltroEspecialidad && coincideFecha;
     });
 
-    const handlePostularse = async () => {
-        if (!seleccionada) return;
-
-        setPostulando(true);
-        setPostulacionMensaje(null);
-        setPostulacionError(false);
-
+    const handleInscribirse = async () => {
+        if (!seleccionado) return;
+    
+        setInscribiendo(true);
+        setInscripcionMensaje(null);
+        setInscripcionError(false);
+    
         try {
-            const response = await API.post('/postulaciones', {
-                id_oferta: seleccionada.id_oferta
-            });
+            const token = localStorage.getItem('token');
+            console.log('Token:', token ? 'Existe' : 'NO HAY TOKEN');
+            console.log('ID del turno:', seleccionado.id_turno);
+            
+            const response = await API.post(`/turnos/${seleccionado.id_turno}/inscribirse`);
+            
+            console.log('Respuesta:', response);
+            
             if (response.status === 201) {
-                setPostulacionMensaje('¡Postulación realizada exitosamente!');
-            } else {
-                throw new Error(response.data.message || 'Error al postularse');
+                setInscripcionMensaje('¡Inscripción exitosa!');
+                setTurnos(turnos.map(t => 
+                    t.id_turno === seleccionado.id_turno 
+                        ? { ...t, estado: 'ocupado' }
+                        : t
+                ));
+                setTimeout(() => setInscripcionMensaje(null), 3000);
             }
         } catch (error) {
-            console.error('Error postulando:', error);
-            setPostulacionError(true);
-            setPostulacionMensaje(
+            console.error('Error completo:', error);
+            console.error('Response data:', error.response?.data);
+            console.error('Status:', error.response?.status);
+            
+            setInscripcionError(true);
+            setInscripcionMensaje(
                 error.response?.data?.message ||
-                'Error al procesar la postulación'
+                error.response?.data?.error ||
+                'Error al procesar la inscripción'
             );
         } finally {
-            setPostulando(false);
+            setInscribiendo(false);
         }
     };
 
@@ -99,7 +111,7 @@ export default function BuscarTurno() {
             <div className="flex justify-center items-center h-screen">
                 <div className="text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                    <p className="text-gray-700 text-lg">Cargando ofertas...</p>
+                    <p className="text-gray-700 text-lg">Cargando turnos...</p>
                 </div>
             </div>
         );
@@ -122,11 +134,11 @@ export default function BuscarTurno() {
         );
     }
 
-    if (ofertas.length === 0) {
+    if (turnos.length === 0) {
         return (
             <div className="flex justify-center items-center h-screen">
                 <div className="text-center">
-                    <p className="text-lg text-gray-700">No hay ofertas disponibles en este momento.</p>
+                    <p className="text-lg text-gray-700">No hay turnos disponibles en este momento.</p>
                     <p className="text-gray-500 mt-2">Vuelve a intentarlo más tarde.</p>
                 </div>
             </div>
@@ -135,18 +147,17 @@ export default function BuscarTurno() {
 
     return (
         <div className="flex h-screen container mx-auto py-10">
-            {/* Columna izquierda - Lista de ofertas */}
+            {/* Columna izquierda - Lista de turnos */}
             <div className="w-1/3 border-r border-gray-200 overflow-y-auto px-4">
-                {/* Input de búsqueda por título */}
                 <div className="relative mb-4">
-                    <label htmlFor="filtroEmpleo" className="block text-sm font-medium text-gray-700 mb-1">
-                        Empleo:
+                    <label htmlFor="filtroTurno" className="block text-sm font-medium text-gray-700 mb-1">
+                        Buscar turno:
                     </label>
                     <div className="relative">
                         <input
-                            id="filtroEmpleo"
+                            id="filtroTurno"
                             type="text"
-                            placeholder="Buscar empleo..."
+                            placeholder="Buscar por especialidad o médico..."
                             className="w-full py-2 pl-10 pr-4 border border-gray-400 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -157,97 +168,121 @@ export default function BuscarTurno() {
                     </div>
                 </div>
 
-                {/* Filtro de ubicación tipo input */}
                 <div className="mb-3">
-                    <label htmlFor="filtroUbicacion" className="block text-sm font-medium text-gray-700 mb-1">
-                        Ubicación:
+                    <label htmlFor="filtroEspecialidad" className="block text-sm font-medium text-gray-700 mb-1">
+                        Especialidad:
                     </label>
-                    <div className="relative">
-                        <input
-                            type="text"
-                            id="filtroUbicacion"
-                            placeholder="Buscar ubicación..."
-                            value={filtroUbicacion}
-                            onChange={(e) => setFiltroUbicacion(e.target.value)}
-                            className="w-full py-2 pl-10 pr-4 border border-gray-400 rounded-lg bg-white text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-600"
-                        />
-                        <div className="absolute top-1/2 -translate-y-1/2 right-3 text-gray-500">
-                            <Icon name="search" />
-                        </div>
-                    </div>
+                    <select
+                        id="filtroEspecialidad"
+                        value={filtroEspecialidad}
+                        onChange={(e) => setFiltroEspecialidad(e.target.value)}
+                        className="w-full py-2 px-3 border border-gray-400 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    >
+                        <option value="">Todas las especialidades</option>
+                        {especialidades.map((esp, idx) => (
+                            <option key={idx} value={esp}>{esp}</option>
+                        ))}
+                    </select>
                 </div>
 
-                {/* Filtro por contrato tipo chip */}
-                <p className="text-sm font-medium text-gray-700 mb-1">Tipo de contrato:</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                    {contratos.map((tipo, idx) => (
-                        <button
-                            key={idx}
-                            onClick={() => setFiltroContrato(filtroContrato === tipo ? "" : tipo)}
-                            className={`px-3 py-1 rounded-full text-sm border transition ${filtroContrato === tipo
-                                ? "bg-gray-800 text-white border-gray-800"
-                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                                }`}
+                <div className="mb-3">
+                    <label htmlFor="filtroFecha" className="block text-sm font-medium text-gray-700 mb-1">
+                        Fecha:
+                    </label>
+                    <input
+                        type="date"
+                        id="filtroFecha"
+                        value={filtroFecha}
+                        onChange={(e) => setFiltroFecha(e.target.value)}
+                        className="w-full py-2 px-3 border border-gray-400 rounded-lg bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                    />
+                </div>
+
+                <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Turnos disponibles:</p>
+                    {turnosFiltrados.map((turno) => (
+                        <div
+                            key={turno.id_turno}
+                            onClick={() => turno.estado === 'disponible' && setSeleccionado(turno)}
+                            className={`p-4 cursor-pointer border-b border-gray-100 hover:bg-blue-50 
+                                ${seleccionado && seleccionado.id_turno === turno.id_turno ? "bg-blue-100" : ""}
+                                ${turno.estado !== 'disponible' ? "opacity-50 cursor-not-allowed bg-gray-100" : ""}
+                            `}
                         >
-                            {tipo}
-                        </button>
+                            <h3 className="text-lg font-semibold text-gray-800">
+                                {turno.especialidad || 'Consulta médica'}
+                            </h3>
+                            <p className="text-sm text-gray-600 flex items-center gap-1">
+                                <Icon name="calendar" /> {new Date(turno.fecha).toLocaleDateString('es-ES')}
+                            </p>
+                            <p className="text-sm text-gray-600 flex items-center gap-1">
+                                <Icon name="clock" /> {turno.hora_inicio} - {turno.hora_fin}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Dr/a. {turno.medico_nombre}
+                            </p>
+                            <span className={`inline-block mt-2 text-xs px-2 py-1 rounded-full ${
+                                turno.estado === 'disponible' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                            }`}>
+                                {turno.estado === 'disponible' ? 'Disponible' : 'Ocupado'}
+                            </span>
+                        </div>
                     ))}
                 </div>
-
-                {/* Lista de ofertas */}
-                {ofertasFiltradas.map((oferta) => (
-                    <div
-                        key={oferta.id_oferta}
-                        onClick={() => setSeleccionada(oferta)}
-                        className={`p-4 cursor-pointer border-b border-gray-100 hover:bg-blue-50 ${seleccionada && seleccionada.id_oferta === oferta.id_oferta ? "bg-blue-100" : ""
-                            }`}
-                    >
-                        <h3 className="text-lg font-semibold text-gray-800">{oferta.titulo}</h3>
-                        <p className="text-sm text-gray-600 flex items-center gap-1">
-                            <Icon name="pointmap" /> {oferta.ubicacion} · {oferta.tipo_contrato}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                            Publicado el {new Date(oferta.fecha_publicacion).toLocaleDateString('sv-SE').replaceAll('-', '/')}
-                        </p>
-                    </div>
-                ))}
             </div>
 
-            {/* Columna derecha - Detalle de oferta */}
-            {seleccionada && (
+            {/* Columna derecha - Detalle del turno */}
+            {seleccionado && (
                 <div className="w-2/3 p-8 overflow-y-auto">
-                    <h3 className="text-4xl font-bold text-gray-900 mb-8">{seleccionada.titulo}</h3>
+                    <h3 className="text-4xl font-bold text-gray-900 mb-8">
+                        Turno con {seleccionado.medico_nombre}
+                    </h3>
                     <div className="text-sm text-gray-600 mb-4 space-y-1">
                         <p className="flex items-center gap-1">
-                            <Icon name="calendar" /> Publicación: {new Date(seleccionada.fecha_publicacion).toLocaleDateString('sv-SE').replaceAll('-', '/')}
+                            <Icon name="stethoscope" /> Especialidad: {seleccionado.especialidad}
                         </p>
                         <p className="flex items-center gap-1">
-                            <Icon name="pointmap" /> {seleccionada.ubicacion}
+                            <Icon name="calendar" /> Fecha: {new Date(seleccionado.fecha).toLocaleDateString('es-ES')}
                         </p>
                         <p className="flex items-center gap-1">
-                            <Icon name="folder" /> Tipo de contrato: {seleccionada.tipo_contrato}
+                            <Icon name="clock" /> Horario: {seleccionado.hora_inicio} - {seleccionado.hora_fin}
                         </p>
                         <p className="flex items-center gap-1">
-                            <Icon name="money" /> Salario: <b>${seleccionada.salario}</b>
+                            <Icon name="pointmap" /> Ubicación: {seleccionado.nombre_localidad || 'No especificada'}, {seleccionado.nombre_provincia || ''}
                         </p>
                     </div>
                     <hr className="my-4" />
-                    <p className="text-gray-700 leading-relaxed mb-8">{seleccionada.descripcion}</p>
+                    <div className="mb-8">
+                        <h4 className="text-lg font-semibold text-gray-800 mb-2">Información del médico</h4>
+                        <p className="text-gray-700">📧 {seleccionado.medico_email}</p>
+                        <p className="text-gray-700">📞 {seleccionado.medico_telefono || 'No disponible'}</p>
+                    </div>
 
-                    <button
-                        onClick={handlePostularse}
-                        disabled={postulando}
-                        className={`${postulando
-                            ? 'bg-gray-500 cursor-not-allowed'
-                            : 'bg-gray-700 hover:bg-gray-900 hover:cursor-pointer'
-                            } text-white px-8 py-4 rounded-lg text-lg font-semibold transition shadow-2xl`}
-                    >
-                        {postulando ? 'Postulando...' : 'Postularme'}
-                    </button>
+                    {seleccionado.estado === 'disponible' ? (
+                        <button
+                            onClick={handleInscribirse}
+                            disabled={inscribiendo}
+                            className={`${inscribiendo
+                                ? 'bg-gray-500 cursor-not-allowed'
+                                : 'bg-blue-600 hover:bg-blue-700 hover:cursor-pointer'
+                                } text-white px-8 py-4 rounded-lg text-lg font-semibold transition shadow-2xl`}
+                        >
+                            {inscribiendo ? 'Inscribiendo...' : 'Inscribirme'}
+                        </button>
+                    ) : (
+                        <button
+                            disabled
+                            className="bg-gray-400 cursor-not-allowed text-white px-8 py-4 rounded-lg text-lg font-semibold"
+                        >
+                            Turno no disponible
+                        </button>
+                    )}
 
-                    {postulacionMensaje && (
-                        <div className={`mt-4 p-3 rounded-lg ${postulacionError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                            {postulacionMensaje}
+                    {inscripcionMensaje && (
+                        <div className={`mt-4 p-3 rounded-lg ${inscripcionError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                            {inscripcionMensaje}
                         </div>
                     )}
                 </div>

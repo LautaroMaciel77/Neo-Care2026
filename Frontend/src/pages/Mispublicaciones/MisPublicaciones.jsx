@@ -68,7 +68,7 @@ export const MisTurnos = () => {
             setCargando(true);
             const token = localStorage.getItem('token');
             
-            // ✅ CORREGIDO: Ahora usa la ruta correcta 'mis-turnos'
+           
             const response = await API.get('/turnos/mis-turnos', {
                 headers: {
                     Authorization: `Bearer ${token}`

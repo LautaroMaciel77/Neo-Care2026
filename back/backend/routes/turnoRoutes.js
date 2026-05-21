@@ -1,3 +1,4 @@
+//routes/turnoRoutes.js
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
@@ -12,31 +13,38 @@ const {
     verificarConflictoHorario,
     modificarHorarioTurno
 } = require('../controllers/turnoController');
+const { 
+    inscribirseTurno, 
+    getMisInscripciones, 
+    cancelarInscripcion 
+} = require('../controllers/inscripcionController');
 
-// Listar turnos disponibles - Público
+// ============================================
+// RUTAS PÚBLICAS
+// ============================================
 router.get('/', listarTurnos);
-
-// Listar turnos filtrados - Público (con parámetros de consulta)
 router.get('/filtrar', listarTurnosFiltrados);
 
-// Obtener mis turnos - Solo médicos
-router.get('/mis-turnos', protect, getMisTurnos);
+// ============================================
+// RUTAS PROTEGIDAS (requieren token)
+// ============================================
+router.use(protect);
 
-// Verificar conflicto de horario - Solo médicos
-router.post('/verificar-conflicto', protect, verificarConflictoHorario);
+//  Las rutas específicas van ANTES que las rutas con parámetros
+router.get('/mis-turnos', getMisTurnos);
+router.get('/mis-inscripciones', getMisInscripciones); 
 
-// Crear turno - Solo médicos logueados
-router.post('/', protect, crearTurno);
+router.post('/verificar-conflicto', verificarConflictoHorario);
+router.post('/', crearTurno);
+router.post('/:id/inscribirse', inscribirseTurno);
 
-// Obtener turno por ID - Público
+router.delete('/inscripciones/:id', cancelarInscripcion);
+router.delete('/:id', cancelarTurno);
+
+router.put('/:id', actualizarTurno);
+router.patch('/:id/horario', modificarHorarioTurno);
+
+
 router.get('/:id', obtenerTurnoPorId);
-
-// Actualizar turno - Solo médicos (dueños del turno)
-router.put('/:id', protect, actualizarTurno);
-
-// Cancelar turno - Solo médicos (dueños del turno)
-router.delete('/:id', protect, cancelarTurno);
-// modificar turno - Solo médicos (dueños del turno)
-router.patch('/:id/horario', protect, modificarHorarioTurno);
 
 module.exports = router;

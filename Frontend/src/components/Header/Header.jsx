@@ -88,7 +88,7 @@ export const Header = () => {
                                             </Link>
                                         </li>
                                         <li className='py-2 px-2'>
-                                            <Link to="/mis-postulaciones" className="flex gap-2 px-4 py-2 text-white hover:bg-gray-700">
+                                            <Link to="/mis-inscripciones" className="flex gap-2 px-4 py-2 text-white hover:bg-gray-700">
                                                 <Icon name="misPostulaciones" /> Mis Turnos
                                             </Link>
                                         </li>

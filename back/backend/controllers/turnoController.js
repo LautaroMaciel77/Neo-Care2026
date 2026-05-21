@@ -1,4 +1,8 @@
+// controllers/turnoController.js
+
 const { sql } = require('../config/db');
+const UsuarioModel = require('../models/UsuarioModel');
+const TurnoModel = require('../models/TurnoModel');
 
 // Crear turno médico
 const crearTurno = async (req, res) => {
@@ -9,27 +13,23 @@ const crearTurno = async (req, res) => {
             return res.status(400).json({ message: 'La fecha, hora de inicio y hora de fin son obligatorias' });
         }
 
-        const medicoResult = await sql.query`
-            EXEC sp_VerificarMedico @id_usuario = ${req.user.id_usuario}
-        `;
+        const medico = await UsuarioModel.verificarMedico(req.user.id_usuario);
         
-        const medico = medicoResult.recordset[0];
         if (!medico || !medico.es_medico) {
             return res.status(403).json({ message: 'Solo los médicos pueden crear turnos' });
         }
 
-        const result = await sql.query`
-            EXEC sp_CrearTurno
-                @fecha = ${fecha},
-                @hora_inicio = ${hora_inicio},
-                @hora_fin = ${hora_fin},
-                @estado = ${estado || 'disponible'},
-                @id_medico = ${medico.id_medico}
-        `;
+        const nuevoTurno = await TurnoModel.crearTurno({
+            fecha,
+            hora_inicio,
+            hora_fin,
+            estado: estado || 'disponible',
+            id_medico: medico.id_medico
+        });
 
         res.status(201).json({
             message: 'Turno creado exitosamente',
-            id_turno: result.recordset[0].id_turno,
+            id_turno: nuevoTurno.id_turno,
         });
     } catch (error) {
         console.error(error);
@@ -40,8 +40,8 @@ const crearTurno = async (req, res) => {
 // Listar todos los turnos disponibles
 const listarTurnos = async (req, res) => {
     try {
-        const result = await sql.query`EXEC sp_ListarTurnosDisponibles`;
-        res.json(result.recordset);
+        const turnos = await TurnoModel.listarTurnosDisponibles();
+        res.json(turnos);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener los turnos' });
@@ -51,20 +51,14 @@ const listarTurnos = async (req, res) => {
 // Listar turnos de un médico específico
 const getMisTurnos = async (req, res) => {
     try {
-        const medicoResult = await sql.query`
-            EXEC sp_VerificarMedico @id_usuario = ${req.user.id_usuario}
-        `;
+        const medico = await UsuarioModel.verificarMedico(req.user.id_usuario);
         
-        const medico = medicoResult.recordset[0];
         if (!medico || !medico.es_medico) {
             return res.status(403).json({ message: 'No autorizado' });
         }
 
-        const result = await sql.query`
-            EXEC sp_ListarTurnosPorMedico @id_medico = ${medico.id_medico}
-        `;
-
-        res.status(200).json(result.recordset);
+        const turnos = await TurnoModel.listarTurnosPorMedico(medico.id_medico);
+        res.status(200).json(turnos);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener los turnos' });
@@ -76,15 +70,14 @@ const listarTurnosFiltrados = async (req, res) => {
     try {
         const { especialidad, fecha, estado, id_localidad } = req.query;
 
-        const result = await sql.query`
-            EXEC sp_ListarTurnosFiltrados
-                @especialidad = ${especialidad || null},
-                @fecha = ${fecha || null},
-                @estado = ${estado || null},
-                @id_localidad = ${id_localidad || null}
-        `;
+        const turnos = await TurnoModel.listarTurnosFiltrados({
+            especialidad,
+            fecha,
+            estado,
+            id_localidad
+        });
 
-        res.json(result.recordset);
+        res.json(turnos);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener los turnos filtrados' });
@@ -96,23 +89,16 @@ const cancelarTurno = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const medicoResult = await sql.query`
-            EXEC sp_VerificarMedico @id_usuario = ${req.user.id_usuario}
-        `;
+        const medico = await UsuarioModel.verificarMedico(req.user.id_usuario);
         
-        const medico = medicoResult.recordset[0];
         if (!medico || !medico.es_medico) {
             return res.status(403).json({ message: 'No autorizado' });
         }
 
-        const result = await sql.query`
-            EXEC sp_CancelarTurno
-                @id_turno = ${id},
-                @id_medico = ${medico.id_medico}
-        `;
+        const resultado = await TurnoModel.cancelarTurno(id, medico.id_medico);
         
         res.status(200).json({ 
-            message: result.recordset[0]?.Mensaje || 'Turno cancelado exitosamente'
+            message: resultado?.Mensaje || 'Turno cancelado exitosamente'
         });
     } catch (error) {
         console.error('Error en BD:', error);
@@ -129,27 +115,21 @@ const actualizarTurno = async (req, res) => {
     const { fecha, hora_inicio, hora_fin, estado } = req.body;
 
     try {
-        const medicoResult = await sql.query`
-            EXEC sp_VerificarMedico @id_usuario = ${req.user.id_usuario}
-        `;
+        const medico = await UsuarioModel.verificarMedico(req.user.id_usuario);
         
-        const medico = medicoResult.recordset[0];
         if (!medico || !medico.es_medico) {
             return res.status(403).json({ message: 'No autorizado' });
         }
 
-        const result = await sql.query`
-            EXEC sp_ActualizarTurno
-                @id_turno = ${id},
-                @id_medico = ${medico.id_medico},
-                @fecha = ${fecha || null},
-                @hora_inicio = ${hora_inicio || null},
-                @hora_fin = ${hora_fin || null},
-                @estado = ${estado || null}
-        `;
+        const resultado = await TurnoModel.actualizarTurno(id, medico.id_medico, {
+            fecha,
+            hora_inicio,
+            hora_fin,
+            estado
+        });
         
         res.status(200).json({ 
-            message: result.recordset[0]?.Mensaje || 'Turno actualizado exitosamente'
+            message: resultado?.Mensaje || 'Turno actualizado exitosamente'
         });
     } catch (error) {
         console.error(error);
@@ -168,15 +148,13 @@ const obtenerTurnoPorId = async (req, res) => {
             return res.status(400).json({ message: 'ID de turno inválido' });
         }
 
-        const result = await sql.query`
-            EXEC sp_ObtenerTurnoPorId @id_turno = ${idTurno}
-        `;
+        const turno = await TurnoModel.obtenerTurnoPorId(idTurno);
         
-        if (result.recordset.length === 0) {
+        if (!turno) {
             return res.status(404).json({ message: 'Turno no encontrado' });
         }
         
-        res.json(result.recordset[0]);
+        res.json(turno);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Error al obtener el turno' });
@@ -188,26 +166,22 @@ const verificarConflictoHorario = async (req, res) => {
     const { fecha, hora_inicio, hora_fin, excluir_turno } = req.body;
 
     try {
-        const medicoResult = await sql.query`
-            EXEC sp_VerificarMedico @id_usuario = ${req.user.id_usuario}
-        `;
+        const medico = await UsuarioModel.verificarMedico(req.user.id_usuario);
         
-        const medico = medicoResult.recordset[0];
         if (!medico || !medico.es_medico) {
             return res.status(403).json({ message: 'No autorizado' });
         }
 
-        const result = await sql.query`
-            EXEC sp_VerificarConflictoHorario
-                @id_medico = ${medico.id_medico},
-                @fecha = ${fecha},
-                @hora_inicio = ${hora_inicio},
-                @hora_fin = ${hora_fin},
-                @excluir_turno = ${excluir_turno || null}
-        `;
+        const resultado = await TurnoModel.verificarConflictoHorario(
+            medico.id_medico,
+            fecha,
+            hora_inicio,
+            hora_fin,
+            excluir_turno
+        );
         
         res.json({ 
-            hay_conflicto: result.recordset[0].conflicto > 0 
+            hay_conflicto: resultado.conflicto > 0 
         });
     } catch (error) {
         console.error(error);
@@ -215,6 +189,56 @@ const verificarConflictoHorario = async (req, res) => {
     }
 };
 
+// Modificar horario de turno
+const modificarHorarioTurno = async (req, res) => {
+    const { id } = req.params;
+    const { fecha, hora_inicio, hora_fin } = req.body;
+
+    try {
+        if (!fecha || !hora_inicio || !hora_fin) {
+            return res.status(400).json({ message: 'La nueva fecha, hora inicio y hora fin son obligatorias' });
+        }
+
+        const medico = await UsuarioModel.verificarMedico(req.user.id_usuario);
+        
+        if (!medico || !medico.es_medico) {
+            return res.status(403).json({ message: 'No autorizado' });
+        }
+
+        const data = await TurnoModel.modificarHorarioTurno(
+            id,
+            medico.id_medico,
+            fecha,
+            hora_inicio,
+            hora_fin
+        );
+        
+        if (data.TienePaciente === 1) {
+            return res.status(200).json({
+                message: `Horario modificado. El paciente ${data.NombrePaciente} (${data.EmailPaciente}) será notificado del cambio.`,
+                warning: true,
+                paciente: {
+                    nombre: data.NombrePaciente,
+                    email: data.EmailPaciente
+                }
+            });
+        }
+        
+        res.status(200).json({ message: data.Mensaje });
+        
+    } catch (error) {
+        console.error(error);
+        let statusCode = 500;
+        let message = error.message;
+        
+        if (error.message.includes('no te pertenece')) statusCode = 404;
+        if (error.message.includes('Ya existe otro turno')) statusCode = 409;
+        
+        res.status(statusCode).json({ message });
+    }
+};
+
+// ============ FUNCIONES DE HISTORIA MÉDICA (SIN MODIFICAR) ============
 
 
 // Registrar atención médica
@@ -306,65 +330,7 @@ const obtenerHistoriaMedica = async (req, res) => {
         res.status(500).json({ message: 'Error al obtener la historia médica' });
     }
 };
-// Modificar horario de turno
-const modificarHorarioTurno = async (req, res) => {
-    const { id } = req.params;
-    const { fecha, hora_inicio, hora_fin } = req.body;
 
-    try {
-        if (!fecha || !hora_inicio || !hora_fin) {
-            return res.status(400).json({ message: 'La nueva fecha, hora inicio y hora fin son obligatorias' });
-        }
-
-        // Verificar que es médico
-        const medicoResult = await sql.query`
-            EXEC sp_VerificarMedico @id_usuario = ${req.user.id_usuario}
-        `;
-        
-        const medico = medicoResult.recordset[0];
-        if (!medico || !medico.es_medico) {
-            return res.status(403).json({ message: 'No autorizado' });
-        }
-
-        // Modificar horario
-        const result = await sql.query`
-            EXEC sp_ModificarHorarioTurno
-                @id_turno = ${id},
-                @id_medico = ${medico.id_medico},
-                @nueva_fecha = ${fecha},
-                @nueva_hora_inicio = ${hora_inicio},
-                @nueva_hora_fin = ${hora_fin}
-        `;
-
-        const data = result.recordset[0];
-        
-        // Si tiene paciente, mostrar advertencia
-        if (data.TienePaciente === 1) {
-            return res.status(200).json({
-                message: `Horario modificado. El paciente ${data.NombrePaciente} (${data.EmailPaciente}) será notificado del cambio.`,
-                warning: true,
-                paciente: {
-                    nombre: data.NombrePaciente,
-                    email: data.EmailPaciente
-                }
-            });
-        }
-        
-        res.status(200).json({ message: data.Mensaje });
-        
-    } catch (error) {
-        console.error(error);
-        let statusCode = 500;
-        let message = error.message;
-        
-        if (error.message.includes('no te pertenece')) statusCode = 404;
-        if (error.message.includes('Ya existe otro turno')) statusCode = 409;
-        
-        res.status(statusCode).json({ message });
-    }
-};
-
-//quitar las historias de paciente y moverlas a controller Paciente
 module.exports = { 
     crearTurno, 
     listarTurnos, 
@@ -375,7 +341,7 @@ module.exports = {
     obtenerTurnoPorId,
     verificarConflictoHorario,
     modificarHorarioTurno
-    //registrarAtencionMedica,
-    //listarHistoriaPorPaciente,
-    //obtenerHistoriaMedica
+    // registrarAtencionMedica,      // Comentado
+    // listarHistoriaPorPaciente,    // Comentado
+    // obtenerHistoriaMedica         // Comentado
 };
