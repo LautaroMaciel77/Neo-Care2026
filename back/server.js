@@ -12,11 +12,10 @@ app.use(express.json());
 
 // Rutas
 app.use('/api/auth', require('./backend/routes/authRoutes'));
-
 app.use('/api/protected', require('./backend/routes/protectedRoutes'));
 app.use('/api/turnos', require('./backend/routes/turnoRoutes'));
-
-
+app.use('/api/comandos', require('./backend/routes/comandoRoutes'));
+app.use('/api/historia', require('./backend/routes/historiaRoutes'));
 // Conexión a la base de datos
 connectDB();
 

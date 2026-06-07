@@ -15,6 +15,19 @@ export const MisTurnos = () => {
         hora_fin: ''
     });
     const [modalAbierto, setModalAbierto] = useState(false);
+    const [puedeDeshacer, setPuedeDeshacer] = useState(false);
+    const [puedeRehacer, setPuedeRehacer] = useState(false);
+    const [mostrarModalHistoria, setMostrarModalHistoria] = useState(false);
+    const [mostrarModalHistoriaVer, setMostrarModalHistoriaVer] = useState(false);
+    const [historiaData, setHistoriaData] = useState({
+        id_inscripcion: '',
+        sintomas: '',
+        diagnostico: '',
+        tratamiento: '',
+        receta: '',
+        notas: ''
+    });
+    const [creandoHistoria, setCreandoHistoria] = useState(false);
     const navigate = useNavigate();
 
     const coloresEstado = {
@@ -24,7 +37,6 @@ export const MisTurnos = () => {
         completado: 'bg-blue-100 text-blue-800'
     };
 
-    // Generar opciones de horas cada 30 minutos
     const generarOpcionesHoras = () => {
         const opciones = [];
         for (let i = 0; i < 24; i++) {
@@ -42,19 +54,23 @@ export const MisTurnos = () => {
         verificarAccesoYcargarTurnos();
     }, []);
 
+    useEffect(() => {
+        verificarHistorial();
+    }, []);
+
     const verificarAccesoYcargarTurnos = async () => {
         const token = localStorage.getItem('token');
         const userRole = localStorage.getItem('userRole');
         
         if (!token) {
-            toast.error('🔒 Debes iniciar sesión para ver tus turnos');
+            toast.error('Debes iniciar sesión para ver tus turnos');
             setTimeout(() => navigate('/'), 2000);
             setCargando(false);
             return;
         }
         
         if (userRole !== 'medico') {
-            toast.warning('👨‍⚕️ Esta sección es solo para médicos.');
+            toast.warning('Esta sección es solo para médicos.');
             setTimeout(() => navigate('/'), 2500);
             setCargando(false);
             return;
@@ -68,7 +84,6 @@ export const MisTurnos = () => {
             setCargando(true);
             const token = localStorage.getItem('token');
             
-           
             const response = await API.get('/turnos/mis-turnos', {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -83,24 +98,71 @@ export const MisTurnos = () => {
             
             if (err.response) {
                 if (err.response.status === 401) {
-                    setError('🔒 Sesión expirada. Por favor, inicia sesión nuevamente.');
+                    setError('Sesión expirada. Por favor, inicia sesión nuevamente.');
                     toast.error('Sesión expirada. Redirigiendo al inicio...');
                     localStorage.removeItem('token');
                     localStorage.removeItem('userRole');
                     setTimeout(() => navigate('/'), 2000);
                 } else if (err.response.status === 403) {
-                    setError('⛔ No tienes permisos para acceder a esta información.');
+                    setError('No tienes permisos para acceder a esta información.');
                     toast.error('Acceso denegado');
                     setTimeout(() => navigate('/'), 2000);
                 } else {
-                    setError('❌ Error al cargar tus turnos. Intenta nuevamente.');
+                    setError('Error al cargar tus turnos. Intenta nuevamente.');
                 }
             } else if (err.request) {
-                setError('🌐 Error de conexión. Verifica tu internet.');
+                setError('Error de conexión. Verifica tu internet.');
             } else {
-                setError('❌ Error inesperado. Por favor, intenta más tarde.');
+                setError('Error inesperado. Por favor, intenta más tarde.');
             }
             setCargando(false);
+        }
+    };
+
+    const verificarHistorial = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await API.get('/comandos/estado', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setPuedeDeshacer(response.data.canUndo);
+            setPuedeRehacer(response.data.canRedo);
+        } catch (err) {
+            console.error('Error al verificar historial:', err);
+        }
+    };
+
+    const deshacerUltimaAccion = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await API.post('/comandos/deshacer', {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            toast.success(response.data.message || 'Acción deshecha');
+            await obtenerMisTurnos();
+            await verificarHistorial();
+            
+        } catch (err) {
+            console.error('Error al deshacer:', err);
+            toast.error(err.response?.data?.message || 'No se pudo deshacer la acción');
+        }
+    };
+
+    const rehacerUltimaAccion = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await API.post('/comandos/rehacer', {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            toast.success(response.data.message || 'Acción rehecha');
+            await obtenerMisTurnos();
+            await verificarHistorial();
+            
+        } catch (err) {
+            console.error('Error al rehacer:', err);
+            toast.error(err.response?.data?.message || 'No se pudo rehacer la acción');
         }
     };
 
@@ -117,26 +179,27 @@ export const MisTurnos = () => {
                 }
             });
             
-            toast.success('✅ Turno cancelado exitosamente');
+            toast.success('Turno cancelado exitosamente');
             setTurnos(turnos.filter(t => t.id_turno !== idTurno));
+            await verificarHistorial();
         } catch (err) {
             console.error('Error al cancelar turno:', err);
             
             if (err.response) {
                 if (err.response.status === 401) {
-                    toast.error('🔒 Sesión expirada. Por favor, inicia sesión nuevamente.');
+                    toast.error('Sesión expirada. Por favor, inicia sesión nuevamente.');
                     localStorage.removeItem('token');
                     localStorage.removeItem('userRole');
                     setTimeout(() => navigate('/'), 2000);
                 } else if (err.response.status === 403) {
-                    toast.error('⛔ No tienes permisos para cancelar este turno.');
+                    toast.error('No tienes permisos para cancelar este turno.');
                 } else {
-                    toast.error(`❌ No se pudo cancelar el turno: ${err.response.data.message || 'Error desconocido'}`);
+                    toast.error(`No se pudo cancelar el turno: ${err.response.data.message || 'Error desconocido'}`);
                 }
             } else if (err.request) {
-                toast.error('🌐 Error de conexión. Verifica tu internet.');
+                toast.error('Error de conexión. Verifica tu internet.');
             } else {
-                toast.error('❌ Error inesperado al cancelar el turno');
+                toast.error('Error inesperado al cancelar el turno');
             }
         }
     };
@@ -160,6 +223,7 @@ export const MisTurnos = () => {
             }
             
             await obtenerMisTurnos();
+            await verificarHistorial();
             
         } catch (err) {
             toast.error(err.response?.data?.message || 'Error al modificar horario');
@@ -178,12 +242,12 @@ export const MisTurnos = () => {
 
     const handleModificarSubmit = async () => {
         if (!nuevoHorario.fecha || !nuevoHorario.hora_inicio || !nuevoHorario.hora_fin) {
-            toast.error('⚠️ Todos los campos son obligatorios');
+            toast.error('Todos los campos son obligatorios');
             return;
         }
 
         if (nuevoHorario.hora_inicio >= nuevoHorario.hora_fin) {
-            toast.error('⚠️ La hora de inicio debe ser menor que la hora de fin');
+            toast.error('La hora de inicio debe ser menor que la hora de fin');
             return;
         }
 
@@ -196,6 +260,94 @@ export const MisTurnos = () => {
 
         setModalAbierto(false);
         setTurnoEditando(null);
+    };
+
+    const abrirModalHistoria = (turno) => {
+        if (!turno.id_inscripcion) {
+            toast.error('Este turno no tiene un paciente inscrito');
+            return;
+        }
+        
+        setHistoriaData({
+            id_inscripcion: turno.id_inscripcion,
+            sintomas: '',
+            diagnostico: '',
+            tratamiento: '',
+            receta: '',
+            notas: ''
+        });
+        setMostrarModalHistoria(true);
+    };
+
+    const verHistoriaMedica = async (idHistoriaMedica) => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await API.get(`/historia/${idHistoriaMedica}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            const historia = response.data;
+            
+            setHistoriaData({
+                id_inscripcion: historia.id_inscripcion || '',
+                sintomas: historia.sintomas || '',
+                diagnostico: historia.diagnostico || '',
+                tratamiento: historia.tratamiento || '',
+                receta: historia.receta || '',
+                notas: historia.notas || ''
+            });
+            setMostrarModalHistoriaVer(true);
+            
+        } catch (err) {
+            console.error('Error al obtener historia:', err);
+            toast.error(err.response?.data?.message || 'Error al cargar la historia médica');
+        }
+    };
+
+    const handleCrearHistoria = async () => {
+        if (!historiaData.sintomas) {
+            toast.error('Los síntomas son obligatorios');
+            return;
+        }
+        if (!historiaData.diagnostico) {
+            toast.error('El diagnóstico es obligatorio');
+            return;
+        }
+        if (!historiaData.tratamiento) {
+            toast.error('El tratamiento es obligatorio');
+            return;
+        }
+        if (!historiaData.receta) {
+            toast.error('La receta es obligatoria');
+            return;
+        }
+        
+        setCreandoHistoria(true);
+        
+        try {
+            const token = localStorage.getItem('token');
+            const response = await API.post('/historia', {
+                id_inscripcion: historiaData.id_inscripcion,
+                sintomas: historiaData.sintomas,
+                diagnostico: historiaData.diagnostico,
+                tratamiento: historiaData.tratamiento,
+                receta: historiaData.receta,
+                notas: historiaData.notas
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            toast.success('Historia médica creada exitosamente');
+            setMostrarModalHistoria(false);
+            await obtenerMisTurnos();
+            await verificarHistorial();
+            
+        } catch (err) {
+            console.error('Error al crear historia:', err);
+            toast.error(err.response?.data?.message || 'Error al crear historia médica');
+        } finally {
+            setCreandoHistoria(false);
+        }
     };
 
     const formatearFecha = (fecha) => {
@@ -279,7 +431,7 @@ export const MisTurnos = () => {
                 </div>
                 
                 <div className="bg-blue-50 rounded-lg p-8 mb-8">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-4">✨ Beneficios de publicar tus turnos</h4>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">Beneficios de publicar tus turnos</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                         <div className="flex items-center gap-2">
                             <span className="text-2xl">👥</span>
@@ -333,7 +485,38 @@ export const MisTurnos = () => {
                 pauseOnHover
                 theme="light"
             />
-            <h3 className="text-4xl font-bold text-gray-900 mb-8">Mis Turnos Publicados</h3>
+            
+            <div className="flex justify-between items-center mb-8">
+                <h3 className="text-4xl font-bold text-gray-900">Mis Turnos Publicados</h3>
+                
+                <div className="flex gap-2">
+                    <button
+                        onClick={deshacerUltimaAccion}
+                        disabled={!puedeDeshacer}
+                        className={`flex items-center gap-1 px-4 py-2 rounded-lg transition ${
+                            puedeDeshacer 
+                                ? 'bg-gray-600 hover:bg-gray-700 text-white cursor-pointer' 
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
+                    >
+                        <span className="material-icons text-base">undo</span>
+                        Deshacer
+                    </button>
+                    
+                    <button
+                        onClick={rehacerUltimaAccion}
+                        disabled={!puedeRehacer}
+                        className={`flex items-center gap-1 px-4 py-2 rounded-lg transition ${
+                            puedeRehacer 
+                                ? 'bg-gray-600 hover:bg-gray-700 text-white cursor-pointer' 
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }`}
+                    >
+                        <span className="material-icons text-base">redo</span>
+                        Rehacer
+                    </button>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {turnosDisponibles.map((turno) => (
@@ -354,23 +537,29 @@ export const MisTurnos = () => {
                             
                             {turno.paciente_nombre && (
                                 <div className="mb-3 p-3 bg-yellow-50 rounded border border-yellow-200">
-                                    <p className="text-sm text-gray-700 font-semibold">👤 Paciente asignado:</p>
+                                    <p className="text-sm text-gray-700 font-semibold">Paciente asignado:</p>
                                     <p className="text-gray-800">{turno.paciente_nombre}</p>
                                     {turno.paciente_email && (
                                         <p className="text-xs text-gray-500 mt-1">📧 {turno.paciente_email}</p>
                                     )}
                                     {turno.alergias && (
-                                        <p className="text-xs text-red-600 mt-1">⚠️ Alergias: {turno.alergias}</p>
+                                        <p className="text-xs text-red-600 mt-1">Alergias: {turno.alergias}</p>
                                     )}
                                     <p className="text-xs text-orange-600 mt-2">
-                                        ⚠️ Si modificas el horario, el paciente será notificado
+                                        Si modificas el horario, el paciente será notificado
                                     </p>
                                 </div>
                             )}
                             
                             <div className="mb-4 text-sm text-gray-600 space-y-1">
-                                <p>📅 Fecha: {formatearFecha(turno.fecha)}</p>
-                                <p>🕐 Horario: {formatearHora(turno.hora_inicio)} - {formatearHora(turno.hora_fin)}</p>
+                                <p className="flex items-center gap-1">
+                                    <span className="material-icons text-base">calendar_today</span>
+                                    Fecha: {formatearFecha(turno.fecha)}
+                                </p>
+                                <p className="flex items-center gap-1">
+                                    <span className="material-icons text-base">schedule</span>
+                                    Horario: {formatearHora(turno.hora_inicio)} - {formatearHora(turno.hora_fin)}
+                                </p>
                             </div>
                             
                             <div className="space-y-2">
@@ -378,14 +567,16 @@ export const MisTurnos = () => {
                                     <>
                                         <button
                                             onClick={() => abrirModalModificar(turno)}
-                                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+                                            className="w-full flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
                                         >
-                                            ✏️ Modificar horario
+                                            <span className="material-icons text-base">edit</span>
+                                            Modificar horario
                                         </button>
                                         <button
                                             onClick={() => cancelarTurno(turno.id_turno)}
-                                            className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded"
+                                            className="w-full flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded"
                                         >
+                                            <span className="material-icons text-base">cancel</span>
                                             Cancelar turno
                                         </button>
                                     </>
@@ -395,22 +586,51 @@ export const MisTurnos = () => {
                                     <>
                                         <button
                                             onClick={() => abrirModalModificar(turno)}
-                                            className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded"
+                                            className="w-full flex items-center justify-center gap-1 bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded"
                                         >
-                                            ✏️ Modificar horario
+                                            <span className="material-icons text-base">edit</span>
+                                            Modificar horario
                                         </button>
                                         <button
                                             disabled
-                                            className="w-full bg-gray-400 cursor-not-allowed text-white font-medium py-2 px-4 rounded"
+                                            className="w-full bg-gray-400 cursor-not-allowed text-white font-medium py-2 px-4 rounded flex items-center justify-center gap-1"
                                         >
+                                            <span className="material-icons text-base">block</span>
                                             Turno ocupado (no cancelable)
+                                        </button>
+                                        
+                                        <button
+                                            onClick={() => abrirModalHistoria(turno)}
+                                            className="w-full flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded"
+                                        >
+                                            <span className="material-icons text-base">medical_services</span>
+                                            Crear Historia Médica
                                         </button>
                                     </>
                                 )}
-                            </div>
-                        </div>
-                    </div>
-                ))}
+                                
+                                {turno.estado === 'completado' && (
+                                    <>
+                                        <button
+                                            disabled
+                                            className="w-full bg-gray-400 cursor-not-allowed text-white font-medium py-2 px-4 rounded flex items-center justify-center gap-1"
+                                        >
+                                            <span className="material-icons text-base">block</span>
+                                            Turno completado
+                                        </button>
+                                        <button
+                                            onClick={() => verHistoriaMedica(turno.id_historia_medica)}
+                                            className="w-full flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+                                        >
+                                            <span className="material-icons text-base">visibility</span>
+                                            Ver Historia Médica
+                                        </button>
+                                    </>
+                                )}
+                                        </div>
+                                    </div>
+                                </div>
+                                ))}
             </div>
 
             {/* Modal para modificar horario */}
@@ -418,7 +638,10 @@ export const MisTurnos = () => {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
                         <div className="flex justify-between items-center mb-5">
-                            <h3 className="text-xl font-bold text-gray-800">✏️ Modificar Horario</h3>
+                            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <span className="material-icons">edit</span>
+                                Modificar Horario
+                            </h3>
                             <button
                                 onClick={() => setModalAbierto(false)}
                                 className="text-gray-400 hover:text-gray-600 text-2xl"
@@ -430,7 +653,7 @@ export const MisTurnos = () => {
                         {turnoEditando.paciente_nombre && (
                             <div className="mb-4 p-3 bg-yellow-50 rounded border border-yellow-200">
                                 <p className="text-sm text-gray-700">
-                                    <span className="font-semibold">⚠️ Atención:</span> Este turno tiene un paciente asignado 
+                                    <span className="font-semibold">Atención:</span> Este turno tiene un paciente asignado 
                                     (<strong>{turnoEditando.paciente_nombre}</strong>). 
                                     Al modificar el horario, se le notificará automáticamente.
                                 </p>
@@ -505,6 +728,181 @@ export const MisTurnos = () => {
                                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                             >
                                 Guardar cambios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal para crear historia médica */}
+            {mostrarModalHistoria && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center p-6 border-b">
+                            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <span className="material-icons">medical_services</span>
+                                Crear Historia Médica
+                            </h3>
+                            <button
+                                onClick={() => setMostrarModalHistoria(false)}
+                                className="text-gray-400 hover:text-gray-600 text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Síntomas <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    value={historiaData.sintomas}
+                                    onChange={(e) => setHistoriaData({...historiaData, sintomas: e.target.value})}
+                                    rows="3"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Describe los síntomas del paciente..."
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Diagnóstico <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    value={historiaData.diagnostico}
+                                    onChange={(e) => setHistoriaData({...historiaData, diagnostico: e.target.value})}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Ej: Gripe, Hipertensión, etc."
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Tratamiento <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    value={historiaData.tratamiento}
+                                    onChange={(e) => setHistoriaData({...historiaData, tratamiento: e.target.value})}
+                                    rows="2"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Tratamiento recetado..."
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Receta <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    value={historiaData.receta}
+                                    onChange={(e) => setHistoriaData({...historiaData, receta: e.target.value})}
+                                    rows="2"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Medicamentos recetados..."
+                                    required
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Notas adicionales
+                                </label>
+                                <textarea
+                                    value={historiaData.notas}
+                                    onChange={(e) => setHistoriaData({...historiaData, notas: e.target.value})}
+                                    rows="2"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Información adicional..."
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
+                            <button
+                                onClick={() => setMostrarModalHistoria(false)}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={handleCrearHistoria}
+                                disabled={creandoHistoria}
+                                className="flex items-center gap-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                            >
+                                <span className="material-icons text-base">save</span>
+                                {creandoHistoria ? 'Guardando...' : 'Guardar Historia Médica'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal para ver historia médica (solo lectura) */}
+            {mostrarModalHistoriaVer && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center p-6 border-b">
+                            <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <span className="material-icons">visibility</span>
+                                Historia Médica
+                            </h3>
+                            <button
+                                onClick={() => setMostrarModalHistoriaVer(false)}
+                                className="text-gray-400 hover:text-gray-600 text-2xl"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 space-y-4">
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Síntomas
+                                </label>
+                                <p className="text-gray-800 whitespace-pre-wrap">{historiaData.sintomas || 'No especificado'}</p>
+                            </div>
+                            
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Diagnóstico
+                                </label>
+                                <p className="text-gray-800 whitespace-pre-wrap">{historiaData.diagnostico || 'No especificado'}</p>
+                            </div>
+                            
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Tratamiento
+                                </label>
+                                <p className="text-gray-800 whitespace-pre-wrap">{historiaData.tratamiento || 'No especificado'}</p>
+                            </div>
+                            
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Receta
+                                </label>
+                                <p className="text-gray-800 whitespace-pre-wrap">{historiaData.receta || 'No especificado'}</p>
+                            </div>
+                            
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Notas adicionales
+                                </label>
+                                <p className="text-gray-800 whitespace-pre-wrap">{historiaData.notas || 'No especificado'}</p>
+                            </div>
+                        </div>
+                        
+                        <div className="flex justify-end p-6 border-t bg-gray-50">
+                            <button
+                                onClick={() => setMostrarModalHistoriaVer(false)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
+                            >
+                                <span className="material-icons text-base">close</span>
+                                Cerrar
                             </button>
                         </div>
                     </div>

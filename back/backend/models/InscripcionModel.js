@@ -35,8 +35,7 @@ class InscripcionModel {
         `;
         return result.recordset[0];
     }
-    
-    // ✅ CORREGIDO: Ahora recibe id_paciente, no id_usuario
+
     static async listarPorPaciente(id_paciente) {
         console.log('📋 listarPorPaciente - id_paciente:', id_paciente);
         
@@ -64,10 +63,7 @@ class InscripcionModel {
         return true;
     }
     
-    // ============================================
-    // MÉTODOS FACHADA
-    // ============================================
-    
+
     static async inscribir(id_usuario, id_turno) {
         console.log('📝 inscribir - id_usuario:', id_usuario, 'id_turno:', id_turno);
         
@@ -109,7 +105,7 @@ class InscripcionModel {
         };
     }
     
-    // ✅ CORREGIDO: Obtiene el id_paciente y luego llama a listarPorPaciente
+
     static async obtenerInscripcionesDeUsuario(id_usuario) {
         console.log('🔍 obtenerInscripcionesDeUsuario - id_usuario:', id_usuario);
         

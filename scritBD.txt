@@ -1,13 +1,7 @@
 USE [master]
 GO
-/****** Object:  Database [clinica]    Script Date: 20/04/2026 08:04:00 p. m. ******/
+/****** Object:  Database [clinica]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE DATABASE [clinica]
- CONTAINMENT = NONE
- ON  PRIMARY 
-( NAME = N'clinica', FILENAME = N'E:\sql\MSSQL16.SQLEXPRESS\MSSQL\DATA\clinica.mdf' , SIZE = 8192KB , MAXSIZE = UNLIMITED, FILEGROWTH = 65536KB )
- LOG ON 
-( NAME = N'clinica_log', FILENAME = N'E:\sql\MSSQL16.SQLEXPRESS\MSSQL\DATA\clinica_log.ldf' , SIZE = 8192KB , MAXSIZE = 2048GB , FILEGROWTH = 65536KB )
- WITH CATALOG_COLLATION = DATABASE_DEFAULT, LEDGER = OFF
 GO
 ALTER DATABASE [clinica] SET COMPATIBILITY_LEVEL = 160
 GO
@@ -82,13 +76,13 @@ ALTER DATABASE [clinica] SET QUERY_STORE (OPERATION_MODE = READ_WRITE, CLEANUP_P
 GO
 USE [clinica]
 GO
-/****** Object:  User [usuarioNeocare]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  User [usuarioNeocare]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE USER [usuarioNeocare] FOR LOGIN [usuarioNeocare] WITH DEFAULT_SCHEMA=[dbo]
 GO
-/****** Object:  User [userNeo]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  User [userNeo]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE USER [userNeo] FOR LOGIN [userNeo] WITH DEFAULT_SCHEMA=[dbo]
 GO
-/****** Object:  User [Neouser]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  User [Neouser]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE USER [Neouser] FOR LOGIN [Neouser] WITH DEFAULT_SCHEMA=[dbo]
 GO
 ALTER ROLE [db_owner] ADD MEMBER [usuarioNeocare]
@@ -97,7 +91,7 @@ ALTER ROLE [db_owner] ADD MEMBER [userNeo]
 GO
 ALTER ROLE [db_owner] ADD MEMBER [Neouser]
 GO
-/****** Object:  Table [dbo].[historia_medica]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Table [dbo].[historia_medica]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -117,7 +111,7 @@ CREATE TABLE [dbo].[historia_medica](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[inscripcion]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Table [dbo].[inscripcion]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -133,7 +127,7 @@ CREATE TABLE [dbo].[inscripcion](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[localidad]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Table [dbo].[localidad]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -148,7 +142,7 @@ CREATE TABLE [dbo].[localidad](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[medico]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Table [dbo].[medico]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -163,7 +157,7 @@ CREATE TABLE [dbo].[medico](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[paciente]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Table [dbo].[paciente]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -179,7 +173,7 @@ CREATE TABLE [dbo].[paciente](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[provincia]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Table [dbo].[provincia]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -197,7 +191,7 @@ CREATE TABLE [dbo].[provincia](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[turno]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Table [dbo].[turno]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -215,7 +209,7 @@ CREATE TABLE [dbo].[turno](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[usuario]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Table [dbo].[usuario]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -238,55 +232,55 @@ CREATE TABLE [dbo].[usuario](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_historia_id_inscripcion]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Index [IX_historia_id_inscripcion]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE NONCLUSTERED INDEX [IX_historia_id_inscripcion] ON [dbo].[historia_medica]
 (
 	[id_inscripcion] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_inscripcion_id_paciente]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Index [IX_inscripcion_id_paciente]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE NONCLUSTERED INDEX [IX_inscripcion_id_paciente] ON [dbo].[inscripcion]
 (
 	[id_paciente] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_inscripcion_id_turno]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Index [IX_inscripcion_id_turno]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE NONCLUSTERED INDEX [IX_inscripcion_id_turno] ON [dbo].[inscripcion]
 (
 	[id_turno] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_localidad_id_provincia]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Index [IX_localidad_id_provincia]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE NONCLUSTERED INDEX [IX_localidad_id_provincia] ON [dbo].[localidad]
 (
 	[id_provincia] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_medico_id_usuario]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Index [IX_medico_id_usuario]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE NONCLUSTERED INDEX [IX_medico_id_usuario] ON [dbo].[medico]
 (
 	[id_usuario] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_paciente_id_usuario]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Index [IX_paciente_id_usuario]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE NONCLUSTERED INDEX [IX_paciente_id_usuario] ON [dbo].[paciente]
 (
 	[id_usuario] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_turno_fecha]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Index [IX_turno_fecha]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE NONCLUSTERED INDEX [IX_turno_fecha] ON [dbo].[turno]
 (
 	[fecha] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_turno_id_medico]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Index [IX_turno_id_medico]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE NONCLUSTERED INDEX [IX_turno_id_medico] ON [dbo].[turno]
 (
 	[id_medico] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_usuario_id_localidad]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  Index [IX_usuario_id_localidad]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 CREATE NONCLUSTERED INDEX [IX_usuario_id_localidad] ON [dbo].[usuario]
 (
 	[id_localidad] ASC
@@ -346,7 +340,7 @@ REFERENCES [dbo].[localidad] ([id_localidad])
 GO
 ALTER TABLE [dbo].[usuario] CHECK CONSTRAINT [FK_usuario_localidad]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ActualizarTurno]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_ActualizarTurno]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -387,7 +381,7 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ActualizarUbicacionUsuario]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_ActualizarUbicacionUsuario]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -418,7 +412,28 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_CancelarTurno]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_CancelarInscripcion]    Script Date: 07/06/2026 04:42:37 p. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- ============================================
+-- 6. sp_CancelarInscripcion
+-- ============================================
+CREATE PROCEDURE [dbo].[sp_CancelarInscripcion]
+    @id_inscripcion INT
+AS
+BEGIN
+    DECLARE @id_turno INT;
+    
+    SELECT @id_turno = id_turno FROM inscripcion WHERE id_inscripcion = @id_inscripcion;
+    
+    DELETE FROM inscripcion WHERE id_inscripcion = @id_inscripcion;
+    
+    UPDATE turno SET estado = 'disponible' WHERE id_turno = @id_turno;
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sp_CancelarTurno]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -461,18 +476,49 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_CrearTurno]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_CrearInscripcion]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+CREATE PROCEDURE [dbo].[sp_CrearInscripcion]
+    @id_paciente INT,
+    @id_turno INT,
+    @id_inscripcion INT OUTPUT,
+    @mensaje NVARCHAR(255) OUTPUT
+AS
+BEGIN
+    BEGIN TRANSACTION;
+    
+    BEGIN TRY
+        INSERT INTO inscripcion (id_turno, id_paciente, fecha_inscripcion)
+        VALUES (@id_turno, @id_paciente, GETDATE());
+        
+        SET @id_inscripcion = SCOPE_IDENTITY();
+        
+        UPDATE turno SET estado = 'ocupado' WHERE id_turno = @id_turno;
+        
+        SET @mensaje = 'Inscripción exitosa';
+        
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        SET @id_inscripcion = NULL;
+        SET @mensaje = ERROR_MESSAGE();
+    END CATCH
+END
 
-/****** STORED PROCEDURES ACTUALIZADOS ******/
-
+GO
+/****** Object:  StoredProcedure [dbo].[sp_CrearTurno]    Script Date: 07/06/2026 04:42:37 p. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 -- ============================================
--- PROCEDIMIENTO: sp_CrearTurno
+-- PROCEDIMIENTO: sp_CrearTurno (CORREGIDO)
 -- ============================================
-CREATE PROCEDURE [dbo].[sp_CrearTurno]
+CREATE   PROCEDURE [dbo].[sp_CrearTurno]
     @fecha DATE,
     @hora_inicio TIME(7),
     @hora_fin TIME(7),
@@ -482,18 +528,35 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
+    -- Verificar que el médico no tenga conflicto de horario
+    -- Un turno conflictúa si:
+    -- 1. Es el mismo día
+    -- 2. No está cancelado
+    -- 3. Los horarios se superponen:
+    --    El nuevo turno empieza antes de que termine el existente Y
+    --    El nuevo turno termina después de que empieza el existente
     IF EXISTS (
         SELECT 1 FROM turno 
         WHERE id_medico = @id_medico 
         AND fecha = @fecha
         AND estado != 'cancelado'
-        AND ((hora_inicio < @hora_fin AND hora_fin > @hora_inicio))
+        AND (
+            -- Caso 1: El nuevo turno empieza dentro de un turno existente
+            (@hora_inicio >= hora_inicio AND @hora_inicio < hora_fin)
+            OR
+            -- Caso 2: El nuevo turno termina dentro de un turno existente
+            (@hora_fin > hora_inicio AND @hora_fin <= hora_fin)
+            OR
+            -- Caso 3: El nuevo turno contiene completamente un turno existente
+            (@hora_inicio <= hora_inicio AND @hora_fin >= hora_fin)
+        )
     )
     BEGIN
         RAISERROR('Ya existe un turno en ese horario', 16, 1);
         RETURN;
     END
     
+    -- Insertar el turno
     INSERT INTO turno (fecha, hora_inicio, hora_fin, estado, id_medico)
     VALUES (@fecha, @hora_inicio, @hora_fin, @estado, @id_medico);
     
@@ -501,7 +564,46 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_EnviarNotificacionCambioHorario]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_EliminarHistoriaMedica]    Script Date: 07/06/2026 04:42:37 p. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_EliminarHistoriaMedica]
+    @id_historia_medica INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    DECLARE @id_inscripcion INT;
+    DECLARE @id_turno INT;
+    
+    -- Obtener la inscripción asociada
+    SELECT @id_inscripcion = id_inscripcion 
+    FROM historia_medica 
+    WHERE id_historia_medica = @id_historia_medica;
+    
+    IF @id_inscripcion IS NULL
+    BEGIN
+        RAISERROR('Historia médica no encontrada', 16, 1);
+        RETURN;
+    END
+    
+    -- Obtener el turno asociado
+    SELECT @id_turno = id_turno 
+    FROM inscripcion 
+    WHERE id_inscripcion = @id_inscripcion;
+    
+    -- Eliminar la historia médica
+    DELETE FROM historia_medica WHERE id_historia_medica = @id_historia_medica;
+    
+    -- Cambiar el estado del turno a 'ocupado' (ya no está completado)
+    UPDATE turno SET estado = 'ocupado' WHERE id_turno = @id_turno;
+    
+    SELECT 'Historia médica eliminada exitosamente' AS Mensaje;
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sp_EnviarNotificacionCambioHorario]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -557,7 +659,40 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetPerfilUsuario]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetInscripcionesByPaciente]    Script Date: 07/06/2026 04:42:37 p. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- ============================================
+-- 4. sp_GetInscripcionesByPaciente
+-- ============================================
+CREATE PROCEDURE [dbo].[sp_GetInscripcionesByPaciente]
+    @id_paciente INT
+AS
+BEGIN
+    SELECT 
+        i.id_inscripcion,
+        i.fecha_inscripcion,
+        t.id_turno,
+        t.fecha AS fecha_turno,
+        t.hora_inicio,
+        t.hora_fin,
+        t.estado AS estado_turno,
+        m.especialidad,
+        u.nombre AS medico_nombre,
+        u.email AS medico_email,
+        u.telefono AS medico_telefono
+    FROM inscripcion i
+    INNER JOIN turno t ON i.id_turno = t.id_turno
+    INNER JOIN medico m ON t.id_medico = m.id_medico
+    INNER JOIN usuario u ON m.id_usuario = u.id_usuario
+    WHERE i.id_paciente = @id_paciente
+    ORDER BY i.fecha_inscripcion DESC
+END
+
+GO
+/****** Object:  StoredProcedure [dbo].[sp_GetPerfilUsuario]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -593,7 +728,7 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ListarHistoriaPorPaciente]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_ListarHistoriaPorPaciente]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -634,7 +769,7 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ListarTurnosDisponibles]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_ListarTurnosDisponibles]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -668,7 +803,7 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ListarTurnosFiltrados]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_ListarTurnosFiltrados]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -709,15 +844,11 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ListarTurnosPorMedico]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_ListarTurnosPorMedico]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
--- ============================================
--- PROCEDIMIENTO: sp_ListarTurnosPorMedico
--- ============================================
 CREATE PROCEDURE [dbo].[sp_ListarTurnosPorMedico]
     @id_medico INT
 AS
@@ -734,22 +865,26 @@ BEGIN
         pu.email AS paciente_email, 
         pu.telefono AS paciente_telefono,
         pa.alergias,
-        pa.edad
+        pa.edad,
+        hm.id_historia_medica 
     FROM turno t
     LEFT JOIN inscripcion i ON t.id_turno = i.id_turno
     LEFT JOIN paciente p ON i.id_paciente = p.id_paciente
     LEFT JOIN usuario pu ON p.id_usuario = pu.id_usuario
     LEFT JOIN paciente pa ON p.id_paciente = pa.id_paciente
+    LEFT JOIN historia_medica hm ON i.id_inscripcion = hm.id_inscripcion  
     WHERE t.id_medico = @id_medico
     ORDER BY t.fecha DESC, t.hora_inicio ASC
 END
-
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ModificarHorarioTurno]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_ModificarHorarioTurno]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+-- ============================================
+-- PROCEDIMIENTO: sp_ModificarHorarioTurno (CORREGIDO)
+-- ============================================
 CREATE   PROCEDURE [dbo].[sp_ModificarHorarioTurno]
     @id_turno INT,
     @id_medico INT,
@@ -792,11 +927,25 @@ BEGIN
             AND fecha = @nueva_fecha
             AND estado != 'cancelado'
             AND (
-                (hora_inicio < @nueva_hora_fin AND hora_fin > @nueva_hora_inicio)
+                -- Caso 1: El nuevo turno empieza dentro de un turno existente
+                (@nueva_hora_inicio >= hora_inicio AND @nueva_hora_inicio < hora_fin)
+                OR
+                -- Caso 2: El nuevo turno termina dentro de un turno existente
+                (@nueva_hora_fin > hora_inicio AND @nueva_hora_fin <= hora_fin)
+                OR
+                -- Caso 3: El nuevo turno contiene completamente un turno existente
+                (@nueva_hora_inicio <= hora_inicio AND @nueva_hora_fin >= hora_fin)
             )
     )
     BEGIN
         RAISERROR('Ya existe otro turno en ese horario', 16, 1);
+        RETURN;
+    END
+    
+    -- Verificar que la hora sea válida
+    IF @nueva_hora_inicio >= @nueva_hora_fin
+    BEGIN
+        RAISERROR('La hora de inicio debe ser menor que la hora de fin', 16, 1);
         RETURN;
     END
     
@@ -817,17 +966,13 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ObtenerHistoriaMedica]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_ObtenerHistoriaMedica]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
--- ============================================
--- PROCEDIMIENTO: sp_ObtenerHistoriaMedica
--- ============================================
-CREATE   PROCEDURE [dbo].[sp_ObtenerHistoriaMedica]
-    @id_historia_medica INT
+CREATE PROCEDURE [dbo].[sp_ObtenerHistoriaMedica]
+    @id_historia_medica INT 
 AS
 BEGIN
     SELECT 
@@ -862,9 +1007,53 @@ BEGIN
     INNER JOIN usuario pu ON p.id_usuario = pu.id_usuario
     WHERE hm.id_historia_medica = @id_historia_medica
 END
+GO
+/****** Object:  StoredProcedure [dbo].[sp_ObtenerHistoriaPorInscripcion]    Script Date: 07/06/2026 04:42:37 p. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ObtenerHistoriaPorInscripcion]
+    @id_inscripcion INT
+AS
+BEGIN
+    SELECT 
+        id_historia_medica, 
+        id_inscripcion, 
+        sintomas, 
+        diagnostico,
+        tratamiento, 
+        receta, 
+        notas, 
+        fecha_atencion
+    FROM [dbo].[historia_medica]  
+    WHERE id_inscripcion = @id_inscripcion
+END
+GO
+/****** Object:  StoredProcedure [dbo].[sp_ObtenerPacienteId]    Script Date: 07/06/2026 04:42:37 p. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_ObtenerPacienteId]
+    @id_usuario INT,
+    @id_paciente INT OUTPUT,
+    @mensaje NVARCHAR(255) OUTPUT
+AS
+BEGIN
+    SELECT @id_paciente = id_paciente 
+    FROM paciente 
+    WHERE id_usuario = @id_usuario;
+    
+    IF @id_paciente IS NULL
+        SET @mensaje = 'No eres paciente. Debes registrarte como paciente primero.';
+    ELSE
+        SET @mensaje = 'OK';
+END
+
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_ObtenerTurnoPorId]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_ObtenerTurnoPorId]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -903,7 +1092,7 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_RegistrarAtencionMedica]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_RegistrarAtencionMedica]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -968,16 +1157,15 @@ BEGIN
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_VerificarConflictoHorario]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_VerificarConflictoHorario]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
 -- ============================================
--- PROCEDIMIENTO: sp_VerificarConflictoHorario
+-- PROCEDIMIENTO: sp_VerificarConflictoHorario (CORREGIDO)
 -- ============================================
-CREATE PROCEDURE [dbo].[sp_VerificarConflictoHorario]
+CREATE   PROCEDURE [dbo].[sp_VerificarConflictoHorario]
     @id_medico INT,
     @fecha DATE,
     @hora_inicio TIME(7),
@@ -991,11 +1179,49 @@ BEGIN
         AND fecha = @fecha
         AND estado != 'cancelado'
         AND (@excluir_turno IS NULL OR id_turno != @excluir_turno)
-        AND ((hora_inicio < @hora_fin AND hora_fin > @hora_inicio))
+        AND (
+            -- Caso 1: El nuevo turno empieza dentro de un turno existente
+            (@hora_inicio >= hora_inicio AND @hora_inicio < hora_fin)
+            OR
+            -- Caso 2: El nuevo turno termina dentro de un turno existente
+            (@hora_fin > hora_inicio AND @hora_fin <= hora_fin)
+            OR
+            -- Caso 3: El nuevo turno contiene completamente un turno existente
+            (@hora_inicio <= hora_inicio AND @hora_fin >= hora_fin)
+        )
 END
 
 GO
-/****** Object:  StoredProcedure [dbo].[sp_VerificarMedico]    Script Date: 20/04/2026 08:04:01 p. m. ******/
+/****** Object:  StoredProcedure [dbo].[sp_VerificarInscripcionExistente]    Script Date: 07/06/2026 04:42:37 p. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE PROCEDURE [dbo].[sp_VerificarInscripcionExistente]
+    @id_paciente INT,
+    @id_turno INT,
+    @existe BIT OUTPUT,
+    @mensaje NVARCHAR(255) OUTPUT
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM inscripcion 
+        WHERE id_paciente = @id_paciente AND id_turno = @id_turno
+    )
+    BEGIN
+        SET @existe = 1;
+        SET @mensaje = 'Ya estás inscrito en este turno';
+    END
+    ELSE
+    BEGIN
+        SET @existe = 0;
+        SET @mensaje = 'OK';
+    END
+END
+
+
+GO
+/****** Object:  StoredProcedure [dbo].[sp_VerificarMedico]    Script Date: 07/06/2026 04:42:37 p. m. ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -1013,6 +1239,37 @@ BEGIN
         CASE WHEN m.id_medico IS NOT NULL THEN 1 ELSE 0 END AS es_medico
     FROM medico m
     WHERE m.id_usuario = @id_usuario
+END
+
+GO
+/****** Object:  StoredProcedure [dbo].[sp_VerificarPropiedadInscripcion]    Script Date: 07/06/2026 04:42:37 p. m. ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+-- ============================================
+-- 5. sp_VerificarPropiedadInscripcion
+-- ============================================
+CREATE PROCEDURE [dbo].[sp_VerificarPropiedadInscripcion]
+    @id_inscripcion INT,
+    @id_paciente INT,
+    @pertenece BIT OUTPUT,
+    @mensaje NVARCHAR(255) OUTPUT
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM inscripcion 
+        WHERE id_inscripcion = @id_inscripcion AND id_paciente = @id_paciente
+    )
+    BEGIN
+        SET @pertenece = 1;
+        SET @mensaje = 'OK';
+    END
+    ELSE
+    BEGIN
+        SET @pertenece = 0;
+        SET @mensaje = 'Esta inscripción no te pertenece';
+    END
 END
 
 GO

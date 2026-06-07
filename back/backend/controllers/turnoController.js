@@ -3,6 +3,11 @@
 const { sql } = require('../config/db');
 const UsuarioModel = require('../models/UsuarioModel');
 const TurnoModel = require('../models/TurnoModel');
+const CommandInvoker = require('../commands/invoker/CommandInvoker');
+const CrearTurnoCommand = require('../commands/turno/CrearTurnoCommand');
+const CancelarTurnoCommand = require('../commands/turno/CancelarTurnoCommand');
+const ActualizarTurnoCommand = require('../commands/turno/ActualizarTurnoCommand');
+const ModificarHorarioCommand = require('../commands/turno/ModificarHorarioCommand');
 
 // Crear turno médico
 const crearTurno = async (req, res) => {
@@ -10,27 +15,25 @@ const crearTurno = async (req, res) => {
 
     try {
         if (!fecha || !hora_inicio || !hora_fin) {
-            return res.status(400).json({ message: 'La fecha, hora de inicio y hora de fin son obligatorias' });
+            return res.status(400).json({ 
+                message: 'La fecha, hora de inicio y hora de fin son obligatorias' 
+            });
         }
 
-        const medico = await UsuarioModel.verificarMedico(req.user.id_usuario);
-        
-        if (!medico || !medico.es_medico) {
-            return res.status(403).json({ message: 'Solo los médicos pueden crear turnos' });
-        }
-
-        const nuevoTurno = await TurnoModel.crearTurno({
+        const command = new CrearTurnoCommand(req.user.id_usuario, {
             fecha,
             hora_inicio,
             hora_fin,
-            estado: estado || 'disponible',
-            id_medico: medico.id_medico
+            estado: estado || 'disponible'
         });
+        
+        const resultado = await CommandInvoker.ejecutar(req.user.id_usuario, command);
 
         res.status(201).json({
             message: 'Turno creado exitosamente',
-            id_turno: nuevoTurno.id_turno,
+            id_turno: resultado.id_turno
         });
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: error.message || 'Error al crear turno' });
@@ -84,24 +87,21 @@ const listarTurnosFiltrados = async (req, res) => {
     }
 };
 
-// Cancelar turno
+
+
 const cancelarTurno = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const medico = await UsuarioModel.verificarMedico(req.user.id_usuario);
-        
-        if (!medico || !medico.es_medico) {
-            return res.status(403).json({ message: 'No autorizado' });
-        }
-
-        const resultado = await TurnoModel.cancelarTurno(id, medico.id_medico);
+        const command = new CancelarTurnoCommand(req.user.id_usuario, id);
+        const resultado = await CommandInvoker.ejecutar(req.user.id_usuario, command);
         
         res.status(200).json({ 
             message: resultado?.Mensaje || 'Turno cancelado exitosamente'
         });
+        
     } catch (error) {
-        console.error('Error en BD:', error);
+        console.error('Error:', error);
         const statusCode = error.message.includes('no encontrado') ? 404 : 500;
         res.status(statusCode).json({ 
             message: error.message || 'Error al cancelar el turno' 
@@ -109,35 +109,70 @@ const cancelarTurno = async (req, res) => {
     }
 };
 
-// Actualizar turno
+
 const actualizarTurno = async (req, res) => {
     const { id } = req.params;
     const { fecha, hora_inicio, hora_fin, estado } = req.body;
 
     try {
-        const medico = await UsuarioModel.verificarMedico(req.user.id_usuario);
+        const command = new ActualizarTurnoCommand(
+            req.user.id_usuario, 
+            id, 
+            { fecha, hora_inicio, hora_fin, estado }
+        );
         
-        if (!medico || !medico.es_medico) {
-            return res.status(403).json({ message: 'No autorizado' });
-        }
-
-        const resultado = await TurnoModel.actualizarTurno(id, medico.id_medico, {
-            fecha,
-            hora_inicio,
-            hora_fin,
-            estado
-        });
+        const resultado = await CommandInvoker.ejecutar(req.user.id_usuario, command);
         
         res.status(200).json({ 
             message: resultado?.Mensaje || 'Turno actualizado exitosamente'
         });
+        
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Error al actualizar el turno' });
+        res.status(500).json({ message: error.message || 'Error al actualizar el turno' });
     }
 };
 
-// Obtener turno por ID
+const modificarHorarioTurno = async (req, res) => {
+    const { id } = req.params;
+    const { fecha, hora_inicio, hora_fin } = req.body;
+
+    try {
+        if (!fecha || !hora_inicio || !hora_fin) {
+            return res.status(400).json({ message: 'La nueva fecha, hora inicio y hora fin son obligatorias' });
+        }
+
+        const command = new ModificarHorarioCommand(
+            req.user.id_usuario,
+            id,
+            { fecha, hora_inicio, hora_fin }
+        );
+        
+        const resultado = await CommandInvoker.ejecutar(req.user.id_usuario, command);
+        
+        if (resultado.warning) {
+            return res.status(200).json({
+                message: resultado.message,
+                warning: true,
+                paciente: resultado.paciente
+            });
+        }
+        
+        res.status(200).json({ message: resultado.Mensaje || 'Horario modificado exitosamente' });
+        
+    } catch (error) {
+        console.error(error);
+        let statusCode = 500;
+        let message = error.message;
+        
+        if (error.message.includes('no te pertenece')) statusCode = 404;
+        if (error.message.includes('Ya existe otro turno')) statusCode = 409;
+        
+        res.status(statusCode).json({ message });
+    }
+};
+
+// Obtener turno por ID de turno
 const obtenerTurnoPorId = async (req, res) => {
     const { id } = req.params;
 
@@ -189,147 +224,7 @@ const verificarConflictoHorario = async (req, res) => {
     }
 };
 
-// Modificar horario de turno
-const modificarHorarioTurno = async (req, res) => {
-    const { id } = req.params;
-    const { fecha, hora_inicio, hora_fin } = req.body;
 
-    try {
-        if (!fecha || !hora_inicio || !hora_fin) {
-            return res.status(400).json({ message: 'La nueva fecha, hora inicio y hora fin son obligatorias' });
-        }
-
-        const medico = await UsuarioModel.verificarMedico(req.user.id_usuario);
-        
-        if (!medico || !medico.es_medico) {
-            return res.status(403).json({ message: 'No autorizado' });
-        }
-
-        const data = await TurnoModel.modificarHorarioTurno(
-            id,
-            medico.id_medico,
-            fecha,
-            hora_inicio,
-            hora_fin
-        );
-        
-        if (data.TienePaciente === 1) {
-            return res.status(200).json({
-                message: `Horario modificado. El paciente ${data.NombrePaciente} (${data.EmailPaciente}) será notificado del cambio.`,
-                warning: true,
-                paciente: {
-                    nombre: data.NombrePaciente,
-                    email: data.EmailPaciente
-                }
-            });
-        }
-        
-        res.status(200).json({ message: data.Mensaje });
-        
-    } catch (error) {
-        console.error(error);
-        let statusCode = 500;
-        let message = error.message;
-        
-        if (error.message.includes('no te pertenece')) statusCode = 404;
-        if (error.message.includes('Ya existe otro turno')) statusCode = 409;
-        
-        res.status(statusCode).json({ message });
-    }
-};
-
-// ============ FUNCIONES DE HISTORIA MÉDICA (SIN MODIFICAR) ============
-
-
-// Registrar atención médica
-const registrarAtencionMedica = async (req, res) => {
-    const { id_inscripcion, sintomas, diagnostico, tratamiento, receta, notas, fecha_atencion } = req.body;
-
-    try {
-        const medicoResult = await sql.query`
-            EXEC sp_VerificarMedico @id_usuario = ${req.user.id_usuario}
-        `;
-        
-        const medico = medicoResult.recordset[0];
-        if (!medico || !medico.es_medico) {
-            return res.status(403).json({ message: 'Solo los médicos pueden registrar atenciones médicas' });
-        }
-
-        if (!id_inscripcion) {
-            return res.status(400).json({ message: 'El ID de inscripción es obligatorio' });
-        }
-
-        const result = await sql.query`
-            EXEC sp_RegistrarAtencionMedica
-                @id_inscripcion = ${id_inscripcion},
-                @sintomas = ${sintomas || null},
-                @diagnostico = ${diagnostico || null},
-                @tratamiento = ${tratamiento || null},
-                @receta = ${receta || null},
-                @notas = ${notas || null},
-                @fecha_atencion = ${fecha_atencion || null}
-        `;
-
-        res.status(201).json({
-            message: 'Atención médica registrada exitosamente',
-            id_historia_medica: result.recordset[0].id_historia_medica
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: error.message || 'Error al registrar atención médica' });
-    }
-};
-
-// Listar historial médico de un paciente
-const listarHistoriaPorPaciente = async (req, res) => {
-    const { id_paciente } = req.params;
-
-    try {
-        const medicoResult = await sql.query`
-            EXEC sp_VerificarMedico @id_usuario = ${req.user.id_usuario}
-        `;
-        
-        const esMedico = medicoResult.recordset[0]?.es_medico || false;
-        
-        const pacienteResult = await sql.query`
-            SELECT id_paciente FROM paciente WHERE id_usuario = ${req.user.id_usuario}
-        `;
-        const esPaciente = pacienteResult.recordset[0]?.id_paciente == id_paciente;
-
-        if (!esMedico && !esPaciente) {
-            return res.status(403).json({ message: 'No autorizado para ver este historial' });
-        }
-
-        const result = await sql.query`
-            EXEC sp_ListarHistoriaPorPaciente @id_paciente = ${id_paciente}
-        `;
-
-        res.json(result.recordset);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al obtener el historial médico' });
-    }
-};
-
-// Obtener detalles de una historia médica específica
-const obtenerHistoriaMedica = async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const result = await sql.query`
-            EXEC sp_ObtenerHistoriaMedica @id_historia_medica = ${id}
-        `;
-
-        if (result.recordset.length === 0) {
-            return res.status(404).json({ message: 'Historia médica no encontrada' });
-        }
-
-        res.json(result.recordset[0]);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al obtener la historia médica' });
-    }
-};
 
 module.exports = { 
     crearTurno, 
@@ -341,7 +236,4 @@ module.exports = {
     obtenerTurnoPorId,
     verificarConflictoHorario,
     modificarHorarioTurno
-    // registrarAtencionMedica,      // Comentado
-    // listarHistoriaPorPaciente,    // Comentado
-    // obtenerHistoriaMedica         // Comentado
 };

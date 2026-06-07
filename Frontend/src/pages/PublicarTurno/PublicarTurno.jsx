@@ -13,6 +13,8 @@ export default function PublicarTurno() {
 
     const [formErrors, setFormErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
+    const [puedeDeshacer, setPuedeDeshacer] = useState(false);
+    const [puedeRehacer, setPuedeRehacer] = useState(false) ;
     const navigate = useNavigate();
 
     // Verificar autenticación y rol al cargar el componente
@@ -31,7 +33,24 @@ export default function PublicarTurno() {
             setTimeout(() => navigate('/'), 2500);
         }
     }, [navigate]);
+    // Verificar historial de comandos
+    useEffect(() => {
+        const verificarHistorial = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await API.get('/comandos/estado', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                setPuedeDeshacer(response.data.canUndo);
+                setPuedeRehacer(response.data.canRedo);
+            } catch (err) {
+                console.error('Error al verificar historial:', err);
+            }
+        };
+        verificarHistorial();
+    }, []);
 
+    
     // Generar opciones de horas cada 30 minutos
     const generarOpcionesHoras = () => {
         const opciones = [];
@@ -187,7 +206,36 @@ export default function PublicarTurno() {
             setIsLoading(false);
         }
     };
+ // Deshacer última acción
+    const deshacerUltimaAccion = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await API.post('/comandos/deshacer', {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success(response.data.message || 'Acción deshecha');
+            setTimeout(() => navigate('/mis-publicaciones'), 1500); // ← Redirigir
+        } catch (err) {
+            console.error('Error al deshacer:', err);
+            toast.error(err.response?.data?.message || 'No se pudo deshacer la acción');
+        }
+    };
 
+// Rehacer última acción
+    const rehacerUltimaAccion = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await API.post('/comandos/rehacer', {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.success(response.data.message || 'Acción rehecha');
+            setTimeout(() => navigate('/mis-publicaciones'), 1500); // ← Redirigir
+        } catch (err) {
+            console.error('Error al rehacer:', err);
+            toast.error(err.response?.data?.message || 'No se pudo rehacer la acción');
+        }
+    };
+    
     const formatearFecha = (fecha) => {
         if (!fecha) return '';
         const [year, month, day] = fecha.split('-');
@@ -223,6 +271,32 @@ export default function PublicarTurno() {
                 theme="light"
             />
             <div className="max-w-2xl mx-auto">
+            <div className="flex justify-end gap-2 mb-4">
+                <button
+                    onClick={deshacerUltimaAccion}
+                    disabled={!puedeDeshacer}
+                    className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm transition ${
+                        puedeDeshacer 
+                            ? 'bg-gray-600 hover:bg-gray-700 text-white cursor-pointer' 
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                >
+                    <span className="material-icons text-base">undo</span>
+                    Deshacer
+                </button>
+                <button
+                    onClick={rehacerUltimaAccion}
+                    disabled={!puedeRehacer}
+                    className={`flex items-center gap-1 px-3 py-1 rounded-lg text-sm transition ${
+                        puedeRehacer 
+                            ? 'bg-gray-600 hover:bg-gray-700 text-white cursor-pointer' 
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                >
+                    <span className="material-icons text-base">redo</span>
+                    Rehacer
+                </button>
+            </div>
                 <div className="text-center mb-8">
                     <h3 className="text-4xl font-bold text-gray-800 mb-2">Publicar Turno Médico</h3>
                     <p className="text-gray-600">Selecciona la fecha y hora para tu disponibilidad</p>

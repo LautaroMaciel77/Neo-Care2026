@@ -1,10 +1,13 @@
 // controllers/inscripcionController.js
 
+
 const InscripcionModel = require('../models/InscripcionModel');
+const CommandInvoker = require('../commands/invoker/CommandInvoker');
+const InscribirseCommand = require('../commands/turno/InscribirseCommand');
+const CancelarInscripcionCommand = require('../commands/turno/CancelarInscripcionCommand');
 
 const inscribirseTurno = async (req, res) => {
-    // ✅ El id_turno viene de req.params, no de req.body
-    const { id } = req.params;  // o const id_turno = req.params.id
+    const { id } = req.params;
 
     try {
         if (!id) {
@@ -13,10 +16,8 @@ const inscribirseTurno = async (req, res) => {
             });
         }
 
-        const resultado = await InscripcionModel.inscribir(
-            req.user.id_usuario, 
-            id  // ← aquí va el id_turno desde params
-        );
+        const command = new InscribirseCommand(req.user.id_usuario, id);
+        const resultado = await CommandInvoker.ejecutar(req.user.id_usuario, command);
 
         res.status(201).json({ 
             message: resultado.mensaje,
@@ -28,6 +29,9 @@ const inscribirseTurno = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+
+
 const getMisInscripciones = async (req, res) => {
     try {
         console.log('📌 getMisInscripciones - Usuario:', req.user.id_usuario);
@@ -45,15 +49,21 @@ const getMisInscripciones = async (req, res) => {
     }
 };
 
+
+
+
+
 const cancelarInscripcion = async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.params;  
 
     try {
-        const resultado = await InscripcionModel.cancelar(id, req.user.id_usuario);
-        res.status(200).json({ message: resultado.mensaje });
+        const command = new CancelarInscripcionCommand(req.user.id_usuario, id);
+        const resultado = await CommandInvoker.ejecutar(req.user.id_usuario, command);
+        res.status(200).json({ message: resultado.message });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: error.message });
+        const status = error.message.includes('no encontrado') ? 404 : 403;
+        res.status(status).json({ message: error.message });
     }
 };
 

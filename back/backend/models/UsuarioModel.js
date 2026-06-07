@@ -19,7 +19,6 @@ class UsuarioModel {
             throw error;
         }
     }
-    // models/UsuarioModel.js - agregar este método
 
 static async verificarPaciente(id_usuario) {
     const result = await sql.query`

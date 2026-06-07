@@ -18,6 +18,18 @@ export default function BuscarTurno() {
     const location = useLocation();
     const turnoIdDesdeLink = location.state?.turnoId;
 
+    // Función para formatear hora (extrae HH:MM de string ISO o Date)
+    const formatearHora = (hora) => {
+        if (!hora) return '';
+        if (typeof hora === 'string' && hora.includes('T')) {
+            return hora.split('T')[1].substring(0, 5);
+        }
+        if (hora instanceof Date) {
+            return hora.toTimeString().substring(0, 5);
+        }
+        return hora;
+    };
+
     // Cargar turnos desde la API (ruta pública)
     useEffect(() => {
         const obtenerTurnos = async () => {
@@ -39,7 +51,6 @@ export default function BuscarTurno() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, []);
 
-    // Seleccionar turno desde navegación o default
     useEffect(() => {
         if (turnos.length > 0) {
             if (turnoIdDesdeLink) {
@@ -216,7 +227,7 @@ export default function BuscarTurno() {
                                 <Icon name="calendar" /> {new Date(turno.fecha).toLocaleDateString('es-ES')}
                             </p>
                             <p className="text-sm text-gray-600 flex items-center gap-1">
-                                <Icon name="clock" /> {turno.hora_inicio} - {turno.hora_fin}
+                                <Icon name="clock" /> {formatearHora(turno.hora_inicio)} - {formatearHora(turno.hora_fin)}
                             </p>
                             <p className="text-xs text-gray-500 mt-1">
                                 Dr/a. {turno.medico_nombre}
@@ -247,11 +258,9 @@ export default function BuscarTurno() {
                             <Icon name="calendar" /> Fecha: {new Date(seleccionado.fecha).toLocaleDateString('es-ES')}
                         </p>
                         <p className="flex items-center gap-1">
-                            <Icon name="clock" /> Horario: {seleccionado.hora_inicio} - {seleccionado.hora_fin}
+                            <Icon name="clock" /> Horario: {formatearHora(seleccionado.hora_inicio)} - {formatearHora(seleccionado.hora_fin)}
                         </p>
-                        <p className="flex items-center gap-1">
-                            <Icon name="pointmap" /> Ubicación: {seleccionado.nombre_localidad || 'No especificada'}, {seleccionado.nombre_provincia || ''}
-                        </p>
+                        {/* Se eliminó la línea de ubicación */}
                     </div>
                     <hr className="my-4" />
                     <div className="mb-8">
